@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hivestudio.ui.format.RubleFormatter
 import com.hivestudio.ui.model.BeatCardUi
 
 @Composable
@@ -32,7 +33,7 @@ fun BeatCard(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(text = beat.genre, style = MaterialTheme.typography.bodyMedium)
                 Text(text = "${beat.bpm} BPM", style = MaterialTheme.typography.bodyMedium)
-                Text(text = beat.price, style = MaterialTheme.typography.bodyMedium)
+                Text(text = RubleFormatter.format(beat.priceRubles), style = MaterialTheme.typography.bodyMedium)
             }
             Text(
                 text = beat.description,
