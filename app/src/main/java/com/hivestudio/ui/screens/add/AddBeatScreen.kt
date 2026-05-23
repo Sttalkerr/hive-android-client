@@ -18,8 +18,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.hivestudio.ui.components.ScreenHeader
 
 @Composable
 fun AddBeatScreen() {
@@ -35,10 +35,9 @@ fun AddBeatScreen() {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            Text(
-                text = "Добавить бит",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
+            ScreenHeader(
+                title = "Добавить бит",
+                subtitle = "Черновик формы для будущей загрузки MP3-файла и отправки на сервер.",
             )
         }
 
