@@ -5,6 +5,8 @@ data class AddBeatDraftUi(
     val genre: String = "",
     val bpm: String = "",
     val priceRubles: String = "",
+    val mp3FileName: String = "",
+    val coverImageFileName: String = "",
     val description: String = "",
 ) {
     val canSave: Boolean
@@ -12,5 +14,7 @@ data class AddBeatDraftUi(
             genre.isNotBlank() &&
             bpm.isNotBlank() &&
             priceRubles.isNotBlank() &&
+            mp3FileName.isNotBlank() &&
+            coverImageFileName.isNotBlank() &&
             description.isNotBlank()
 }

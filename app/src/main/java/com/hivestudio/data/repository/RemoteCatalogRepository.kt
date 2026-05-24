@@ -22,6 +22,7 @@ class RemoteCatalogRepository(
                     genre = beat.genre,
                     bpm = beat.bpm,
                     priceRubles = beat.price.roundToInt(),
+                    coverImageFileName = beat.coverImageFileName,
                     description = beat.description,
                     plays = stats.playsCount,
                 )

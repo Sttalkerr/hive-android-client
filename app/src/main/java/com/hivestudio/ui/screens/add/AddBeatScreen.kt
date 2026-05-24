@@ -27,12 +27,16 @@ fun AddBeatScreen() {
     val genre = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
     val bpm = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
     val priceRubles = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val mp3FileName = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val coverImageFileName = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
     val description = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
     val draft = AddBeatDraftUi(
         title = title.value,
         genre = genre.value,
         bpm = bpm.value,
         priceRubles = priceRubles.value,
+        mp3FileName = mp3FileName.value,
+        coverImageFileName = coverImageFileName.value,
         description = description.value,
     )
 
@@ -83,6 +87,22 @@ fun AddBeatScreen() {
                         singleLine = true,
                     )
                     OutlinedTextField(
+                        value = draft.mp3FileName,
+                        onValueChange = { mp3FileName.value = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("MP3 файл") },
+                        supportingText = { Text("Следующим шагом заменим это поле на реальный выбор mp3-файла") },
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = draft.coverImageFileName,
+                        onValueChange = { coverImageFileName.value = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Квадратная обложка") },
+                        supportingText = { Text("Здесь будет реальная загрузка квадратной картинки обложки") },
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
                         value = draft.description,
                         onValueChange = { description.value = it },
                         modifier = Modifier.fillMaxWidth(),
@@ -90,7 +110,7 @@ fun AddBeatScreen() {
                         minLines = 3,
                     )
                     Text(
-                        text = "Поле загрузки MP3 подключим следующим шагом после сетевого слоя клиента и API сервера. Все цены в проекте считаются в рублях.",
+                        text = "У бита обязательно должны быть два файла: mp3 и квадратная обложка. Сейчас это уже обязательные поля формы; следующим шагом заменим их на реальный выбор файлов.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -121,6 +141,7 @@ fun AddBeatScreen() {
                             genre = draft.genre.ifBlank { "Жанр" },
                             bpm = draft.bpm.toIntOrNull() ?: 0,
                             priceRubles = draft.priceRubles.toIntOrNull() ?: 0,
+                            coverImageFileName = draft.coverImageFileName.ifBlank { "square-cover.jpg" },
                             description = draft.description.ifBlank { "Описание будущего релиза появится здесь." },
                             plays = 0,
                         )

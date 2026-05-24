@@ -5,6 +5,7 @@ data class BeatCardUi(
     val genre: String,
     val bpm: Int,
     val priceRubles: Int,
+    val coverImageFileName: String,
     val description: String,
     val plays: Int,
 )

@@ -8,6 +8,7 @@ data class BeatDto(
     val price: Double,
     val description: String,
     val mp3FileName: String,
+    val coverImageFileName: String,
     val createdAt: String,
 )
 
@@ -18,4 +19,5 @@ data class CreateBeatRequestDto(
     val price: Double,
     val description: String,
     val mp3FileName: String,
+    val coverImageFileName: String,
 )

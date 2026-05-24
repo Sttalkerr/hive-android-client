@@ -10,5 +10,6 @@ fun AddBeatDraftUi.toCreateBeatRequestDto(): CreateBeatRequestDto =
         bpm = bpm.toIntOrNull() ?: 0,
         price = priceRubles.toDoubleOrNull() ?: 0.0,
         description = description.trim(),
-        mp3FileName = "draft-upload.mp3",
+        mp3FileName = mp3FileName.trim().ifBlank { "draft-upload.mp3" },
+        coverImageFileName = coverImageFileName.trim().ifBlank { "draft-cover.jpg" },
     )
