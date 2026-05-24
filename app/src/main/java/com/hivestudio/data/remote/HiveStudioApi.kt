@@ -36,6 +36,11 @@ interface HiveStudioApi {
         @Query("query") query: String? = null,
     ): List<BeatDto>
 
+    @GET("api/v1/beats/{beatId}")
+    suspend fun getBeat(
+        @Path("beatId") beatId: String,
+    ): BeatDto
+
     @DELETE("api/v1/beats/{beatId}")
     suspend fun deleteBeat(
         @Path("beatId") beatId: String,
@@ -57,6 +62,16 @@ interface HiveStudioApi {
     suspend fun getStatistics(
         @Path("beatId") beatId: String,
     ): BeatStatisticsDto
+
+    @POST("api/v1/beats/{beatId}/simulate/play")
+    suspend fun simulatePlay(
+        @Path("beatId") beatId: String,
+    ): SimulationResponseDto
+
+    @POST("api/v1/beats/{beatId}/simulate/like")
+    suspend fun simulateLike(
+        @Path("beatId") beatId: String,
+    ): SimulationResponseDto
 
     @POST("api/v1/beats/{beatId}/simulate/purchase")
     suspend fun simulatePurchase(

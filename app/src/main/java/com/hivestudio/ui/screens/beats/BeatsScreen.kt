@@ -26,6 +26,7 @@ import com.hivestudio.ui.model.LoadState
 @Composable
 fun BeatsScreen(
     viewModel: BeatsViewModel = viewModel(),
+    onOpenBeat: (String) -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -74,6 +75,7 @@ fun BeatsScreen(
                     BeatCard(
                         beat = beat,
                         onDeleteClick = { viewModel.deleteBeat(beat.id) },
+                        onOpenClick = { onOpenBeat(beat.id) },
                     )
                 }
             }

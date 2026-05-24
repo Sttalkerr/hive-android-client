@@ -4,6 +4,7 @@ import com.hivestudio.data.remote.HiveStudioApi
 import com.hivestudio.data.remote.ApiConfig
 import com.hivestudio.data.remote.HiveStudioApiFactory
 import com.hivestudio.ui.model.BeatCardUi
+import com.hivestudio.ui.model.BeatDetailsUi
 import com.hivestudio.ui.model.DashboardMetricUi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -54,6 +55,44 @@ class RemoteCatalogRepository(
 
     suspend fun deleteBeat(beatId: String) {
         api.deleteBeat(beatId)
+    }
+
+    suspend fun loadBeatDetails(beatId: String): BeatDetailsUi = coroutineScope {
+        val beatDeferred = async { api.getBeat(beatId) }
+        val statsDeferred = async { api.getStatistics(beatId) }
+
+        val beat = beatDeferred.await()
+        val stats = statsDeferred.await()
+
+        BeatDetailsUi(
+            beat = BeatCardUi(
+                id = beat.id,
+                title = beat.title,
+                genre = beat.genre,
+                bpm = beat.bpm,
+                priceRubles = beat.price.roundToInt(),
+                coverImageFileName = beat.coverImageFileName,
+                coverImageUrl = "${ApiConfig.BASE_URL}uploads/${beat.coverImageFileName}",
+                description = beat.description,
+                plays = stats.playsCount,
+            ),
+            likesCount = stats.likesCount,
+            purchasesCount = stats.purchasesCount,
+            revenueRubles = stats.revenueTotal.roundToInt(),
+            updatedAt = stats.updatedAt,
+        )
+    }
+
+    suspend fun simulatePlay(beatId: String) {
+        api.simulatePlay(beatId)
+    }
+
+    suspend fun simulateLike(beatId: String) {
+        api.simulateLike(beatId)
+    }
+
+    suspend fun simulatePurchase(beatId: String) {
+        api.simulatePurchase(beatId)
     }
 
     private fun formatRubles(amount: Int): String = "${amount.toString().reversed().chunked(3).joinToString(" ").reversed()} ₽"

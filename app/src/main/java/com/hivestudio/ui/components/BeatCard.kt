@@ -2,6 +2,7 @@ package com.hivestudio.ui.components
 
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ fun BeatCard(
     beat: BeatCardUi,
     modifier: Modifier = Modifier,
     onDeleteClick: (() -> Unit)? = null,
+    onOpenClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val artwork by produceState<ImageBitmap?>(initialValue = null, beat.coverImageUrl, beat.localCoverUri) {
@@ -62,7 +64,13 @@ fun BeatCard(
         }
     }
 
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (onOpenClick != null) Modifier.clickable(onClick = onOpenClick) else Modifier
+            )
+    ) {
         Column(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
