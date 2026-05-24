@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.background
 import androidx.compose.material3.Card
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ import java.net.URL
 fun BeatCard(
     beat: BeatCardUi,
     modifier: Modifier = Modifier,
+    onDeleteClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val artwork by produceState<ImageBitmap?>(initialValue = null, beat.coverImageUrl, beat.localCoverUri) {
@@ -106,6 +108,13 @@ fun BeatCard(
                 text = "Прослушивания: ${beat.plays}",
                 style = MaterialTheme.typography.labelLarge,
             )
+            if (onDeleteClick != null) {
+                Button(
+                    onClick = onDeleteClick,
+                ) {
+                    Text("Удалить бит")
+                }
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hivestudio.data.repository.AddBeatUploadRepository
+import com.hivestudio.data.repository.CatalogRefreshBus
 import com.hivestudio.ui.model.AddBeatDraftUi
 import com.hivestudio.ui.model.LoadState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +34,7 @@ class AddBeatViewModel(
             _uploadState.value = LoadState.Loading
             _uploadState.value = runCatching {
                 val beat = repository.uploadBeat(context, draft, mp3Uri, coverUri)
+                CatalogRefreshBus.notifyChanged()
                 LoadState.Success("Бит ${beat.title} успешно загружен")
             }.getOrElse {
                 LoadState.Error(it.message ?: "Не удалось загрузить бит")

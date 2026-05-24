@@ -215,6 +215,7 @@ fun AddBeatScreen(
                     )
                     BeatCard(
                         beat = BeatCardUi(
+                            id = "preview-draft",
                             title = draft.title.ifBlank { "Новый бит" },
                             genre = draft.genre.ifBlank { "Жанр" },
                             bpm = draft.bpm.toIntOrNull() ?: 0,

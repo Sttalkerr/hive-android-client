@@ -71,7 +71,10 @@ fun BeatsScreen(
 
             is LoadState.Success -> {
                 items(current.data) { beat ->
-                    BeatCard(beat = beat)
+                    BeatCard(
+                        beat = beat,
+                        onDeleteClick = { viewModel.deleteBeat(beat.id) },
+                    )
                 }
             }
         }

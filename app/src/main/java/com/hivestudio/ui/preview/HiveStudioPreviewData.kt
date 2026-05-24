@@ -13,6 +13,7 @@ object HiveStudioPreviewData {
 
     val beats = listOf(
         BeatCardUi(
+            id = "preview-1",
             title = "Midnight Pulse",
             genre = "Trap",
             bpm = 140,
@@ -23,6 +24,7 @@ object HiveStudioPreviewData {
             plays = 124,
         ),
         BeatCardUi(
+            id = "preview-2",
             title = "Velvet Echo",
             genre = "R&B",
             bpm = 96,

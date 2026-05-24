@@ -2,6 +2,7 @@ package com.hivestudio.ui.screens.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hivestudio.data.repository.CatalogRefreshBus
 import com.hivestudio.data.repository.RemoteCatalogRepository
 import com.hivestudio.ui.model.DashboardMetricUi
 import com.hivestudio.ui.model.LoadState
@@ -18,6 +19,11 @@ class DashboardViewModel(
 
     init {
         loadDashboard()
+        viewModelScope.launch {
+            CatalogRefreshBus.flow.collect {
+                loadDashboard()
+            }
+        }
     }
 
     fun loadDashboard() {

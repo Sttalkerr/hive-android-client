@@ -15,6 +15,7 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.DELETE
 
 interface HiveStudioApi {
     @POST("api/v1/auth/register")
@@ -34,6 +35,11 @@ interface HiveStudioApi {
     suspend fun getBeats(
         @Query("query") query: String? = null,
     ): List<BeatDto>
+
+    @DELETE("api/v1/beats/{beatId}")
+    suspend fun deleteBeat(
+        @Path("beatId") beatId: String,
+    )
 
     @Multipart
     @POST("api/v1/beats")

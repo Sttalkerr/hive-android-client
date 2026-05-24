@@ -1,6 +1,7 @@
 package com.hivestudio.ui.model
 
 data class BeatCardUi(
+    val id: String,
     val title: String,
     val genre: String,
     val bpm: Int,

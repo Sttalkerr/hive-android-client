@@ -19,6 +19,7 @@ class RemoteCatalogRepository(
             async {
                 val stats = api.getStatistics(beat.id)
                 BeatCardUi(
+                    id = beat.id,
                     title = beat.title,
                     genre = beat.genre,
                     bpm = beat.bpm,
@@ -49,6 +50,10 @@ class RemoteCatalogRepository(
             DashboardMetricUi("Покупки", totalPurchases.toString(), "События simulate/purchase"),
             DashboardMetricUi("Выручка", formatRubles(totalRevenue), "Расчёт по серверной статистике"),
         )
+    }
+
+    suspend fun deleteBeat(beatId: String) {
+        api.deleteBeat(beatId)
     }
 
     private fun formatRubles(amount: Int): String = "${amount.toString().reversed().chunked(3).joinToString(" ").reversed()} ₽"
