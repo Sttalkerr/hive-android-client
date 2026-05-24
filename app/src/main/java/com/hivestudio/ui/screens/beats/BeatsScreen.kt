@@ -6,23 +6,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hivestudio.ui.components.BeatCard
 import com.hivestudio.ui.components.ScreenHeader
-import com.hivestudio.ui.preview.HiveStudioPreviewData
+import com.hivestudio.ui.model.LoadState
 
 @Composable
-fun BeatsScreen() {
+fun BeatsScreen(
+    viewModel: BeatsViewModel = viewModel(),
+) {
     var query by rememberSaveable { mutableStateOf("") }
-    val beats = HiveStudioPreviewData.beats.filter {
-        it.title.contains(query, ignoreCase = true) || it.genre.contains(query, ignoreCase = true)
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(query) {
+        viewModel.loadBeats(query.ifBlank { null })
     }
 
     LazyColumn(
@@ -33,7 +42,7 @@ fun BeatsScreen() {
         item {
             ScreenHeader(
                 title = "Мои биты",
-                subtitle = "Каталог продюсера с локальным поиском по названию и жанру.",
+                subtitle = "Список загружается с сервера Hive Studio по API.",
             )
         }
 
@@ -47,8 +56,24 @@ fun BeatsScreen() {
             )
         }
 
-        items(beats) { beat ->
-            BeatCard(beat = beat)
+        when (val current = state) {
+            LoadState.Loading -> {
+                item {
+                    CircularProgressIndicator()
+                }
+            }
+
+            is LoadState.Error -> {
+                item {
+                    Text(current.message)
+                }
+            }
+
+            is LoadState.Success -> {
+                items(current.data) { beat ->
+                    BeatCard(beat = beat)
+                }
+            }
         }
     }
 }

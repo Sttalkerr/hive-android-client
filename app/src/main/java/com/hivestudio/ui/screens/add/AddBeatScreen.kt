@@ -13,10 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.hivestudio.ui.components.BeatCard
@@ -26,7 +23,18 @@ import com.hivestudio.ui.model.BeatCardUi
 
 @Composable
 fun AddBeatScreen() {
-    var draft by rememberSaveable { mutableStateOf(AddBeatDraftUi()) }
+    val title = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val genre = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val bpm = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val priceRubles = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val description = rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val draft = AddBeatDraftUi(
+        title = title.value,
+        genre = genre.value,
+        bpm = bpm.value,
+        priceRubles = priceRubles.value,
+        description = description.value,
+    )
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -48,35 +56,35 @@ fun AddBeatScreen() {
                 ) {
                     OutlinedTextField(
                         value = draft.title,
-                        onValueChange = { draft = draft.copy(title = it) },
+                        onValueChange = { title.value = it },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Название") },
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = draft.genre,
-                        onValueChange = { draft = draft.copy(genre = it) },
+                        onValueChange = { genre.value = it },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Жанр") },
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = draft.bpm,
-                        onValueChange = { draft = draft.copy(bpm = it.filter(Char::isDigit)) },
+                        onValueChange = { bpm.value = it.filter(Char::isDigit) },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("BPM") },
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = draft.priceRubles,
-                        onValueChange = { draft = draft.copy(priceRubles = it.filter(Char::isDigit)) },
+                        onValueChange = { priceRubles.value = it.filter(Char::isDigit) },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Цена лицензии, ₽") },
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = draft.description,
-                        onValueChange = { draft = draft.copy(description = it) },
+                        onValueChange = { description.value = it },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Описание") },
                         minLines = 3,
