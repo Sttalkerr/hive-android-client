@@ -2,7 +2,9 @@ package com.hivestudio.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hivestudio.data.remote.toUserMessage
 import com.hivestudio.data.repository.AuthRepository
+import com.hivestudio.data.repository.CatalogRefreshBus
 import com.hivestudio.ui.model.LoadState
 import com.hivestudio.ui.model.ProfileUi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,8 +21,15 @@ class SettingsViewModel(
     private val _messageState = MutableStateFlow("")
     val messageState: StateFlow<String> = _messageState.asStateFlow()
 
+    private val _hasSessionState = MutableStateFlow(authRepository.hasActiveSession())
+    val hasSessionState: StateFlow<Boolean> = _hasSessionState.asStateFlow()
+
     init {
-        refreshProfile()
+        if (authRepository.hasActiveSession()) {
+            refreshProfile()
+        } else {
+            _profileState.value = LoadState.Error("Выполни вход, чтобы загрузить профиль и свои биты")
+        }
     }
 
     fun register(email: String, password: String, stageName: String) {
@@ -30,9 +39,11 @@ class SettingsViewModel(
                 authRepository.register(email, password, stageName)
             }.onSuccess {
                 _messageState.value = "Регистрация выполнена"
+                _hasSessionState.value = true
+                CatalogRefreshBus.notifyChanged()
                 refreshProfile()
             }.onFailure {
-                _messageState.value = it.message ?: "Не удалось зарегистрироваться"
+                _messageState.value = it.toUserMessage("Не удалось зарегистрироваться")
             }
         }
     }
@@ -44,14 +55,21 @@ class SettingsViewModel(
                 authRepository.login(email, password)
             }.onSuccess {
                 _messageState.value = "Вход выполнен"
+                _hasSessionState.value = true
+                CatalogRefreshBus.notifyChanged()
                 refreshProfile()
             }.onFailure {
-                _messageState.value = it.message ?: "Не удалось войти"
+                _messageState.value = it.toUserMessage("Не удалось войти")
             }
         }
     }
 
     fun refreshProfile() {
+        if (!authRepository.hasActiveSession()) {
+            _hasSessionState.value = false
+            _profileState.value = LoadState.Error("Выполни вход, чтобы загрузить профиль и свои биты")
+            return
+        }
         viewModelScope.launch {
             _profileState.value = LoadState.Loading
             _profileState.value = runCatching {
@@ -64,8 +82,16 @@ class SettingsViewModel(
                     )
                 )
             }.getOrElse {
-                LoadState.Error(it.message ?: "Не удалось загрузить профиль")
+                LoadState.Error(it.toUserMessage("Не удалось загрузить профиль"))
             }
         }
+    }
+
+    fun logout() {
+        authRepository.logout()
+        _hasSessionState.value = false
+        _messageState.value = "Выход выполнен"
+        _profileState.value = LoadState.Error("Сессия очищена. Выполни вход снова")
+        CatalogRefreshBus.notifyChanged()
     }
 }

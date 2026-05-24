@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hivestudio.data.remote.toUserMessage
 import com.hivestudio.data.repository.AddBeatUploadRepository
 import com.hivestudio.data.repository.CatalogRefreshBus
 import com.hivestudio.ui.model.AddBeatDraftUi
@@ -37,7 +38,7 @@ class AddBeatViewModel(
                 CatalogRefreshBus.notifyChanged()
                 LoadState.Success("Бит ${beat.title} успешно загружен")
             }.getOrElse {
-                LoadState.Error(it.message ?: "Не удалось загрузить бит")
+                LoadState.Error(it.toUserMessage("Не удалось загрузить бит"))
             }
         }
     }

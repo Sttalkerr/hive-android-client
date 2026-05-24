@@ -36,6 +36,7 @@ fun SettingsScreen(
     var stageName by rememberSaveable { mutableStateOf("") }
     val profileState = viewModel.profileState.collectAsStateWithLifecycle().value
     val message = viewModel.messageState.collectAsStateWithLifecycle().value
+    val hasSession = viewModel.hasSessionState.collectAsStateWithLifecycle().value
     val form = AuthFormUi(
         email = email,
         password = password,
@@ -50,7 +51,7 @@ fun SettingsScreen(
         item {
             ScreenHeader(
                 title = "Настройки",
-                subtitle = "Локальные параметры интерфейса и будущие настройки подключения к API.",
+                subtitle = "Профиль, вход продюсера и локальные параметры интерфейса.",
             )
         }
 
@@ -88,6 +89,13 @@ fun SettingsScreen(
                     ) {
                         Text("Обновить профиль")
                     }
+                    Button(
+                        onClick = { viewModel.logout() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = hasSession,
+                    ) {
+                        Text("Выйти")
+                    }
                 }
             }
         }
@@ -101,6 +109,11 @@ fun SettingsScreen(
                     Text(
                         text = "Вход и регистрация",
                         style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = "Тестовый вход: producer@hivestudio.dev / secret123",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedTextField(
                         value = email,

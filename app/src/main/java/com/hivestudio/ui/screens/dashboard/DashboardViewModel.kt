@@ -2,6 +2,7 @@ package com.hivestudio.ui.screens.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hivestudio.data.remote.toUserMessage
 import com.hivestudio.data.repository.CatalogRefreshBus
 import com.hivestudio.data.repository.RemoteCatalogRepository
 import com.hivestudio.ui.model.DashboardMetricUi
@@ -32,7 +33,7 @@ class DashboardViewModel(
             _state.value = runCatching {
                 LoadState.Success(repository.loadDashboardMetrics())
             }.getOrElse {
-                LoadState.Error(it.message ?: "Не удалось загрузить аналитику")
+                LoadState.Error(it.toUserMessage("Не удалось загрузить аналитику"))
             }
         }
     }

@@ -2,6 +2,7 @@ package com.hivestudio.ui.screens.beatdetails
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hivestudio.data.remote.toUserMessage
 import com.hivestudio.data.repository.CatalogRefreshBus
 import com.hivestudio.data.repository.RemoteCatalogRepository
 import com.hivestudio.ui.model.BeatDetailsUi
@@ -23,7 +24,7 @@ class BeatDetailsViewModel(
             _state.value = runCatching {
                 LoadState.Success(repository.loadBeatDetails(beatId))
             }.getOrElse {
-                LoadState.Error(it.message ?: "Не удалось загрузить бит")
+                LoadState.Error(it.toUserMessage("Не удалось загрузить бит"))
             }
         }
     }
@@ -41,7 +42,7 @@ class BeatDetailsViewModel(
             }.onSuccess {
                 _state.value = LoadState.Success(it)
             }.onFailure {
-                _state.value = LoadState.Error(it.message ?: "Не удалось обновить статистику")
+                _state.value = LoadState.Error(it.toUserMessage("Не удалось обновить статистику"))
             }
         }
     }

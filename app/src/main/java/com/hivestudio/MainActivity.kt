@@ -5,12 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import com.hivestudio.data.session.SessionStore
 import com.hivestudio.ui.app.HiveStudioApp
 import com.hivestudio.ui.theme.HiveStudioTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SessionStore.initialize(applicationContext)
         enableEdgeToEdge()
         setContent {
             HiveStudioTheme {
