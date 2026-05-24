@@ -3,6 +3,7 @@ package com.hivestudio.data.remote
 import com.hivestudio.data.remote.model.AuthRequestDto
 import com.hivestudio.data.remote.model.AuthResponseDto
 import com.hivestudio.data.remote.model.BeatDto
+import com.hivestudio.data.remote.model.BeatHistoryPointDto
 import com.hivestudio.data.remote.model.BeatStatisticsDto
 import com.hivestudio.data.remote.model.ProfileDto
 import com.hivestudio.data.remote.model.SimulationResponseDto
@@ -62,6 +63,12 @@ interface HiveStudioApi {
     suspend fun getStatistics(
         @Path("beatId") beatId: String,
     ): BeatStatisticsDto
+
+    @GET("api/v1/beats/{beatId}/history")
+    suspend fun getHistory(
+        @Path("beatId") beatId: String,
+        @Query("days") days: Int = 7,
+    ): List<BeatHistoryPointDto>
 
     @POST("api/v1/beats/{beatId}/simulate/play")
     suspend fun simulatePlay(

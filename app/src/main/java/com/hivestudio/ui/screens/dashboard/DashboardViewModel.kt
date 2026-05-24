@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.hivestudio.data.remote.toUserMessage
 import com.hivestudio.data.repository.CatalogRefreshBus
 import com.hivestudio.data.repository.RemoteCatalogRepository
-import com.hivestudio.ui.model.DashboardMetricUi
+import com.hivestudio.ui.model.DashboardOverviewUi
 import com.hivestudio.ui.model.LoadState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
 class DashboardViewModel(
     private val repository: RemoteCatalogRepository = RemoteCatalogRepository(),
 ) : ViewModel() {
-    private val _state = MutableStateFlow<LoadState<List<DashboardMetricUi>>>(LoadState.Loading)
-    val state: StateFlow<LoadState<List<DashboardMetricUi>>> = _state.asStateFlow()
+    private val _state = MutableStateFlow<LoadState<DashboardOverviewUi>>(LoadState.Loading)
+    val state: StateFlow<LoadState<DashboardOverviewUi>> = _state.asStateFlow()
 
     init {
         loadDashboard()
@@ -31,7 +31,7 @@ class DashboardViewModel(
         viewModelScope.launch {
             _state.value = LoadState.Loading
             _state.value = runCatching {
-                LoadState.Success(repository.loadDashboardMetrics())
+                LoadState.Success(repository.loadDashboardOverview())
             }.getOrElse {
                 LoadState.Error(it.toUserMessage("Не удалось загрузить аналитику"))
             }

@@ -14,3 +14,11 @@ data class SimulationResponseDto(
     val eventType: String,
     val message: String,
 )
+
+data class BeatHistoryPointDto(
+    val date: String,
+    val playsCount: Int,
+    val likesCount: Int,
+    val purchasesCount: Int,
+    val revenueTotal: Double,
+)

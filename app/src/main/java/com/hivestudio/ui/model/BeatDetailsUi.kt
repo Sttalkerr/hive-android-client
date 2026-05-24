@@ -6,4 +6,5 @@ data class BeatDetailsUi(
     val purchasesCount: Int,
     val revenueRubles: Int,
     val updatedAt: String,
+    val history: List<BeatHistoryPointUi>,
 )

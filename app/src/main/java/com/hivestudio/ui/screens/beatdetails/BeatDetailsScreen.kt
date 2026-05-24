@@ -5,25 +5,27 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hivestudio.ui.components.BeatCard
+import com.hivestudio.ui.components.BeatHistorySection
+import com.hivestudio.ui.components.BeatDetailsHeroPanel
+import com.hivestudio.ui.components.BeatQuickActionsPanel
 import com.hivestudio.ui.components.DashboardMetricCard
 import com.hivestudio.ui.components.ScreenHeader
 import com.hivestudio.ui.media.AudioPreviewPlayer
 import com.hivestudio.ui.model.DashboardMetricUi
 import com.hivestudio.ui.model.LoadState
-import androidx.compose.runtime.remember
 
 @Composable
 fun BeatDetailsScreen(
@@ -51,8 +53,8 @@ fun BeatDetailsScreen(
     ) {
         item {
             ScreenHeader(
-                title = "Карточка бита",
-                subtitle = "Детальный просмотр и тестовые события аналитики.",
+                title = "Аналитика бита",
+                subtitle = "Подробная карточка релиза, история интереса и тестовые действия по статистике.",
             )
         }
 
@@ -61,21 +63,15 @@ fun BeatDetailsScreen(
             is LoadState.Error -> item { Text(current.message) }
             is LoadState.Success -> {
                 item {
-                    BeatCard(beat = current.data.beat)
-                }
-
-                item {
-                    OutlinedButton(
-                        onClick = { player.togglePlayback(current.data.beat.audioPreviewUrl) },
-                    ) {
-                        Text(
-                            when {
-                                player.isLoading -> "Загрузка превью..."
-                                player.isPlaying -> "Остановить превью"
-                                else -> "Слушать MP3-превью"
-                            }
-                        )
-                    }
+                    BeatDetailsHeroPanel(
+                        beat = current.data.beat,
+                        previewButtonText = when {
+                            player.isLoading -> "Загрузка превью..."
+                            player.isPlaying -> "Остановить превью"
+                            else -> "Слушать MP3-превью"
+                        },
+                        onPreviewClick = { player.togglePlayback(current.data.beat.audioPreviewUrl) },
+                    )
                 }
 
                 if (!player.errorMessage.isNullOrBlank()) {
@@ -84,31 +80,39 @@ fun BeatDetailsScreen(
                     }
                 }
 
-                items(
-                    listOf(
-                        DashboardMetricUi("Прослушивания", current.data.beat.plays.toString(), "Текущее значение"),
-                        DashboardMetricUi("Лайки", current.data.likesCount.toString(), "Текущее значение"),
-                        DashboardMetricUi("Покупки", current.data.purchasesCount.toString(), "Текущее значение"),
-                        DashboardMetricUi("Выручка", "${current.data.revenueRubles} ₽", "Обновлено: ${current.data.updatedAt}"),
-                    )
-                ) { metric ->
-                    DashboardMetricCard(metric = metric)
+                item {
+                    BeatHistorySection(history = current.data.history)
+                }
+
+                val metrics = listOf(
+                    DashboardMetricUi("Прослушивания", current.data.beat.plays.toString(), "Суммарно по биту"),
+                    DashboardMetricUi("Лайки", current.data.likesCount.toString(), "Текущий интерес"),
+                    DashboardMetricUi("Покупки", current.data.purchasesCount.toString(), "Конверсия в сделки"),
+                    DashboardMetricUi("Выручка", "${current.data.revenueRubles} ₽", "Обновлено: ${current.data.updatedAt}"),
+                )
+
+                items(metrics.chunked(2).size) { rowIndex ->
+                    val row = metrics.chunked(2)[rowIndex]
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        row.forEachIndexed { index, metric ->
+                            DashboardMetricCard(
+                                metric = metric,
+                                modifier = Modifier.weight(1f),
+                                emphasized = rowIndex == 0 && index == 0,
+                            )
+                        }
+                        if (row.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
 
                 item {
-                    Button(onClick = { viewModel.simulatePlay(beatId) }) {
-                        Text("Добавить прослушивание")
-                    }
-                }
-                item {
-                    Button(onClick = { viewModel.simulateLike(beatId) }) {
-                        Text("Добавить лайк")
-                    }
-                }
-                item {
-                    Button(onClick = { viewModel.simulatePurchase(beatId) }) {
-                        Text("Добавить покупку")
-                    }
+                    BeatQuickActionsPanel(
+                        onPlay = { viewModel.simulatePlay(beatId) },
+                        onLike = { viewModel.simulateLike(beatId) },
+                        onPurchase = { viewModel.simulatePurchase(beatId) },
+                    )
                 }
             }
         }

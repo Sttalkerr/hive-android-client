@@ -5,6 +5,8 @@ import com.hivestudio.data.remote.ApiConfig
 import com.hivestudio.data.remote.HiveStudioApiFactory
 import com.hivestudio.ui.model.BeatCardUi
 import com.hivestudio.ui.model.BeatDetailsUi
+import com.hivestudio.ui.model.DashboardOverviewUi
+import com.hivestudio.ui.model.BeatHistoryPointUi
 import com.hivestudio.ui.model.DashboardMetricUi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -54,6 +56,17 @@ class RemoteCatalogRepository(
         )
     }
 
+    suspend fun loadDashboardOverview(): DashboardOverviewUi {
+        val beatCards = loadBeatCards(query = null)
+        val metrics = loadDashboardMetrics()
+        return DashboardOverviewUi(
+            metrics = metrics,
+            beatsCount = beatCards.size,
+            topBeat = beatCards.maxByOrNull { it.plays },
+            recentBeats = beatCards.sortedByDescending { it.plays }.take(3),
+        )
+    }
+
     suspend fun deleteBeat(beatId: String) {
         api.deleteBeat(beatId)
     }
@@ -61,9 +74,11 @@ class RemoteCatalogRepository(
     suspend fun loadBeatDetails(beatId: String): BeatDetailsUi = coroutineScope {
         val beatDeferred = async { api.getBeat(beatId) }
         val statsDeferred = async { api.getStatistics(beatId) }
+        val historyDeferred = async { api.getHistory(beatId) }
 
         val beat = beatDeferred.await()
         val stats = statsDeferred.await()
+        val history = historyDeferred.await()
 
         BeatDetailsUi(
             beat = BeatCardUi(
@@ -82,6 +97,15 @@ class RemoteCatalogRepository(
             purchasesCount = stats.purchasesCount,
             revenueRubles = stats.revenueTotal.roundToInt(),
             updatedAt = stats.updatedAt,
+            history = history.map { point ->
+                BeatHistoryPointUi(
+                    dateLabel = point.date.substringAfterLast("-"),
+                    playsCount = point.playsCount,
+                    likesCount = point.likesCount,
+                    purchasesCount = point.purchasesCount,
+                    revenueRubles = point.revenueTotal.roundToInt(),
+                )
+            },
         )
     }
 

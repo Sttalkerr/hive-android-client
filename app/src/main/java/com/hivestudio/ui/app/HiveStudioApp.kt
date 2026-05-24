@@ -80,7 +80,11 @@ fun HiveStudioApp() {
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(BottomDestination.Dashboard.route) {
-                DashboardScreen()
+                DashboardScreen(
+                    onOpenBeat = { beatId ->
+                        navController.navigate("beat/$beatId")
+                    }
+                )
             }
             composable(BottomDestination.Beats.route) {
                 BeatsScreen(
