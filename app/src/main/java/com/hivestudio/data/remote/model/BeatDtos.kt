@@ -8,7 +8,9 @@ data class BeatDto(
     val price: Double,
     val description: String,
     val mp3FileName: String,
+    val mp3Url: String,
     val coverImageFileName: String,
+    val coverImageUrl: String,
     val createdAt: String,
 )
 

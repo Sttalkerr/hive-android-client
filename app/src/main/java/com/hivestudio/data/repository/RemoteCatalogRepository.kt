@@ -26,7 +26,8 @@ class RemoteCatalogRepository(
                     bpm = beat.bpm,
                     priceRubles = beat.price.roundToInt(),
                     coverImageFileName = beat.coverImageFileName,
-                    coverImageUrl = "${ApiConfig.BASE_URL}uploads/${beat.coverImageFileName}",
+                    audioPreviewUrl = beat.mp3Url.toAbsoluteApiUrl(),
+                    coverImageUrl = beat.coverImageUrl.toAbsoluteApiUrl(),
                     description = beat.description,
                     plays = stats.playsCount,
                 )
@@ -72,7 +73,8 @@ class RemoteCatalogRepository(
                 bpm = beat.bpm,
                 priceRubles = beat.price.roundToInt(),
                 coverImageFileName = beat.coverImageFileName,
-                coverImageUrl = "${ApiConfig.BASE_URL}uploads/${beat.coverImageFileName}",
+                audioPreviewUrl = beat.mp3Url.toAbsoluteApiUrl(),
+                coverImageUrl = beat.coverImageUrl.toAbsoluteApiUrl(),
                 description = beat.description,
                 plays = stats.playsCount,
             ),
@@ -96,4 +98,7 @@ class RemoteCatalogRepository(
     }
 
     private fun formatRubles(amount: Int): String = "${amount.toString().reversed().chunked(3).joinToString(" ").reversed()} ₽"
+
+    private fun String.toAbsoluteApiUrl(): String =
+        if (startsWith("http://") || startsWith("https://")) this else "${ApiConfig.BASE_URL}${removePrefix("/")}"
 }

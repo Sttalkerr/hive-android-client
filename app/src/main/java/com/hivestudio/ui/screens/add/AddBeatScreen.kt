@@ -221,6 +221,7 @@ fun AddBeatScreen(
                             bpm = draft.bpm.toIntOrNull() ?: 0,
                             priceRubles = draft.priceRubles.toIntOrNull() ?: 0,
                             coverImageFileName = draft.coverImageFileName.ifBlank { "square-cover.jpg" },
+                            audioPreviewUrl = null,
                             localCoverUri = coverUriString,
                             description = draft.description.ifBlank { "Описание будущего релиза появится здесь." },
                             plays = 0,

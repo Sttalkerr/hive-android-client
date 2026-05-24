@@ -7,6 +7,7 @@ data class BeatCardUi(
     val bpm: Int,
     val priceRubles: Int,
     val coverImageFileName: String,
+    val audioPreviewUrl: String? = null,
     val coverImageUrl: String? = null,
     val localCoverUri: String? = null,
     val description: String,

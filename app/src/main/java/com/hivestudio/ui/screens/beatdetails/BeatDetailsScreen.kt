@@ -7,18 +7,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hivestudio.ui.components.BeatCard
 import com.hivestudio.ui.components.DashboardMetricCard
 import com.hivestudio.ui.components.ScreenHeader
+import com.hivestudio.ui.media.AudioPreviewPlayer
 import com.hivestudio.ui.model.DashboardMetricUi
 import com.hivestudio.ui.model.LoadState
+import androidx.compose.runtime.remember
 
 @Composable
 fun BeatDetailsScreen(
@@ -26,9 +31,17 @@ fun BeatDetailsScreen(
     viewModel: BeatDetailsViewModel = viewModel(),
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
+    val context = LocalContext.current
+    val player = remember(beatId) { AudioPreviewPlayer(context) }
 
     LaunchedEffect(beatId) {
         viewModel.loadBeat(beatId)
+    }
+
+    DisposableEffect(player) {
+        onDispose {
+            player.release()
+        }
     }
 
     LazyColumn(
@@ -49,6 +62,26 @@ fun BeatDetailsScreen(
             is LoadState.Success -> {
                 item {
                     BeatCard(beat = current.data.beat)
+                }
+
+                item {
+                    OutlinedButton(
+                        onClick = { player.togglePlayback(current.data.beat.audioPreviewUrl) },
+                    ) {
+                        Text(
+                            when {
+                                player.isLoading -> "Загрузка превью..."
+                                player.isPlaying -> "Остановить превью"
+                                else -> "Слушать MP3-превью"
+                            }
+                        )
+                    }
+                }
+
+                if (!player.errorMessage.isNullOrBlank()) {
+                    item {
+                        Text(player.errorMessage!!)
+                    }
                 }
 
                 items(
