@@ -4,8 +4,8 @@ enum class BottomDestination(
     val route: String,
     val title: String,
 ) {
+    Catalog("catalog", "Каталог"),
     Dashboard("dashboard", "Статистика"),
     Beats("beats", "Мои биты"),
-    AddBeat("add_beat", "Добавить"),
-    Settings("settings", "Настройки"),
+    Profile("profile", "Профиль"),
 }

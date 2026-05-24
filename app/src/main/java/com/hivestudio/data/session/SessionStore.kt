@@ -10,12 +10,16 @@ object SessionStore {
     private const val keyProducerId = "producer_id"
     private const val keyEmail = "email"
     private const val keyStageName = "stage_name"
+    private const val keyAvatarUrl = "avatar_url"
 
     @Volatile
     private var preferences: SharedPreferences? = null
 
     val currentToken: String?
         get() = preferences?.getString(keyToken, null)
+
+    val currentProducerId: String?
+        get() = preferences?.getString(keyProducerId, null)
 
     fun initialize(context: Context) {
         if (preferences != null) return
@@ -29,6 +33,7 @@ object SessionStore {
             .putString(keyProducerId, authResponse.id)
             .putString(keyEmail, authResponse.email)
             .putString(keyStageName, authResponse.stageName)
+            .putString(keyAvatarUrl, authResponse.avatarUrl)
             .apply()
     }
 

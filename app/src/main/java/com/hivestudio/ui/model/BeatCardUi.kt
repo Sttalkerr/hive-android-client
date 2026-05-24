@@ -2,6 +2,10 @@ package com.hivestudio.ui.model
 
 data class BeatCardUi(
     val id: String,
+    val producerId: String,
+    val producerStageName: String,
+    val producerAvatarUrl: String? = null,
+    val isOwnedBySession: Boolean = false,
     val title: String,
     val genre: String,
     val bpm: Int,

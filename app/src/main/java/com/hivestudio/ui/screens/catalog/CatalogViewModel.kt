@@ -1,4 +1,4 @@
-package com.hivestudio.ui.screens.beats
+package com.hivestudio.ui.screens.catalog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class BeatsViewModel(
+class CatalogViewModel(
     private val repository: RemoteCatalogRepository = RemoteCatalogRepository(),
 ) : ViewModel() {
     private val _state = MutableStateFlow<LoadState<List<BeatCardUi>>>(LoadState.Loading)
@@ -20,23 +20,23 @@ class BeatsViewModel(
     private var currentQuery: String? = null
 
     init {
+        loadCatalog()
         viewModelScope.launch {
             CatalogRefreshBus.flow.collect {
-                loadBeats(currentQuery)
+                loadCatalog(currentQuery)
             }
         }
     }
 
-    fun loadBeats(query: String?) {
+    fun loadCatalog(query: String? = null) {
         currentQuery = query
         viewModelScope.launch {
             _state.value = LoadState.Loading
             _state.value = runCatching {
-                LoadState.Success(repository.loadBeatCards(query))
+                LoadState.Success(repository.loadCatalogBeatCards(query))
             }.getOrElse {
-                LoadState.Error(it.toUserMessage("Не удалось загрузить список битов"))
+                LoadState.Error(it.toUserMessage("Не удалось загрузить каталог"))
             }
         }
     }
-
 }

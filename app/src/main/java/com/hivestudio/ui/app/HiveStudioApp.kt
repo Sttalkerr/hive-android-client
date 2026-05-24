@@ -3,10 +3,10 @@ package com.hivestudio.ui.app
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddBox
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.LibraryMusic
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,21 +25,27 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hivestudio.ui.navigation.BottomDestination
 import com.hivestudio.ui.screens.add.AddBeatScreen
+import com.hivestudio.ui.screens.auth.AuthScreen
 import com.hivestudio.ui.screens.beatdetails.BeatDetailsScreen
 import com.hivestudio.ui.screens.beats.BeatsScreen
+import com.hivestudio.ui.screens.catalog.CatalogScreen
 import com.hivestudio.ui.screens.dashboard.DashboardScreen
-import com.hivestudio.ui.screens.settings.SettingsScreen
+import com.hivestudio.ui.screens.metricdetails.MetricDetailsScreen
+import com.hivestudio.ui.model.AnalyticsMetricType
+import com.hivestudio.ui.screens.profile.ProfileScreen
 
 @Composable
 fun HiveStudioApp() {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    val bottomRoutes = BottomDestination.entries.map(BottomDestination::route).toSet()
+    val showBottomBar = currentDestination?.route in bottomRoutes
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentDestination = navBackStackEntry?.destination
-
+            if (!showBottomBar) return@Scaffold
             NavigationBar {
                 BottomDestination.entries.forEach { destination ->
                     val selected = currentDestination
@@ -60,10 +66,10 @@ fun HiveStudioApp() {
                         icon = {
                             Icon(
                                 imageVector = when (destination) {
+                                    BottomDestination.Catalog -> Icons.Outlined.Search
                                     BottomDestination.Dashboard -> Icons.Outlined.BarChart
                                     BottomDestination.Beats -> Icons.Outlined.LibraryMusic
-                                    BottomDestination.AddBeat -> Icons.Outlined.AddBox
-                                    BottomDestination.Settings -> Icons.Outlined.Settings
+                                    BottomDestination.Profile -> Icons.Outlined.Person
                                 },
                                 contentDescription = destination.title,
                             )
@@ -76,13 +82,23 @@ fun HiveStudioApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = BottomDestination.Dashboard.route,
+            startDestination = BottomDestination.Catalog.route,
             modifier = Modifier.padding(innerPadding),
         ) {
+            composable(BottomDestination.Catalog.route) {
+                CatalogScreen(
+                    onOpenBeat = { beatId ->
+                        navController.navigate("beat/$beatId")
+                    },
+                )
+            }
             composable(BottomDestination.Dashboard.route) {
                 DashboardScreen(
                     onOpenBeat = { beatId ->
                         navController.navigate("beat/$beatId")
+                    },
+                    onOpenMetric = { metricType ->
+                        navController.navigate("metric/$metricType")
                     }
                 )
             }
@@ -93,11 +109,20 @@ fun HiveStudioApp() {
                     }
                 )
             }
-            composable(BottomDestination.AddBeat.route) {
-                AddBeatScreen()
+            composable(BottomDestination.Profile.route) {
+                ProfileScreen(
+                    onOpenAuth = { navController.navigate("auth") },
+                    onOpenAddBeat = { navController.navigate("add_beat") },
+                )
             }
-            composable(BottomDestination.Settings.route) {
-                SettingsScreen()
+            composable("auth") {
+                AuthScreen(
+                    onSuccess = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable("add_beat") {
+                AddBeatScreen()
             }
             composable(
                 route = "beat/{beatId}",
@@ -105,6 +130,17 @@ fun HiveStudioApp() {
             ) { backStackEntry ->
                 BeatDetailsScreen(
                     beatId = backStackEntry.arguments?.getString("beatId").orEmpty(),
+                    onDeleted = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = "metric/{metricType}",
+                arguments = listOf(navArgument("metricType") { type = NavType.StringType }),
+            ) { backStackEntry ->
+                MetricDetailsScreen(
+                    metricType = AnalyticsMetricType.fromRouteKey(
+                        backStackEntry.arguments?.getString("metricType").orEmpty()
+                    )
                 )
             }
         }

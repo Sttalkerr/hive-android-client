@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -22,8 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -32,6 +33,8 @@ import com.hivestudio.ui.components.ScreenHeader
 import com.hivestudio.ui.model.AddBeatDraftUi
 import com.hivestudio.ui.model.BeatCardUi
 import com.hivestudio.ui.model.LoadState
+import com.hivestudio.ui.theme.BlueAccent
+import com.hivestudio.ui.theme.GraphiteSoft
 
 @Composable
 fun AddBeatScreen(
@@ -100,16 +103,20 @@ fun AddBeatScreen(
         item {
             ScreenHeader(
                 title = "Добавить бит",
-                subtitle = "Форма отправляет MP3 и квадратную обложку на сервер в формате multipart.",
+                subtitle = "Новый релиз: файл, обложка, цена и быстрый визуальный предпросмотр.",
+                centered = true,
             )
         }
 
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = GraphiteSoft),
+            ) {
                 Column(
                     modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
+                    Text("Основное", style = MaterialTheme.typography.titleMedium)
                     OutlinedTextField(
                         value = draft.title,
                         onValueChange = { title.value = it },
@@ -135,15 +142,27 @@ fun AddBeatScreen(
                         value = draft.priceRubles,
                         onValueChange = { priceRubles.value = it.filter(Char::isDigit) },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Цена лицензии, ₽") },
+                        label = { Text("Цена, ₽") },
                         singleLine = true,
                     )
+                }
+            }
+        }
+
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = GraphiteSoft),
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text("Файлы", style = MaterialTheme.typography.titleMedium)
                     OutlinedTextField(
                         value = draft.mp3FileName,
                         onValueChange = {},
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("MP3 файл") },
-                        supportingText = { Text("Выбери настоящий mp3-файл с устройства") },
                         readOnly = true,
                         singleLine = true,
                     )
@@ -158,7 +177,6 @@ fun AddBeatScreen(
                         onValueChange = {},
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Квадратная обложка") },
-                        supportingText = { Text("Выбери квадратное изображение обложки") },
                         readOnly = true,
                         singleLine = true,
                     )
@@ -168,23 +186,63 @@ fun AddBeatScreen(
                     ) {
                         Text("Выбрать обложку")
                     }
+                }
+            }
+        }
+
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = GraphiteSoft),
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text("Описание", style = MaterialTheme.typography.titleMedium)
                     OutlinedTextField(
                         value = draft.description,
                         onValueChange = { description.value = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Описание") },
-                        minLines = 3,
+                        label = { Text("Описание релиза") },
+                        minLines = 4,
                     )
-                    Text(
-                        text = "У бита обязательно должны быть два файла: mp3 и квадратная обложка. После выбора файлов можно сразу отправить их на сервер.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                }
+            }
+        }
+
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = BlueAccent.copy(alpha = 0.12f)),
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text("Предпросмотр", style = MaterialTheme.typography.titleMedium)
+                    BeatCard(
+                        beat = BeatCardUi(
+                            id = "preview-draft",
+                            producerId = "local-producer",
+                            producerStageName = "Твой профиль",
+                            title = draft.title.ifBlank { "Новый бит" },
+                            genre = draft.genre.ifBlank { "Жанр" },
+                            bpm = draft.bpm.toIntOrNull() ?: 0,
+                            priceRubles = draft.priceRubles.toIntOrNull() ?: 0,
+                            coverImageFileName = draft.coverImageFileName.ifBlank { "cover.jpg" },
+                            audioPreviewUrl = null,
+                            localCoverUri = coverUriString,
+                            description = draft.description.ifBlank { "Короткое описание будущего релиза." },
+                            plays = 0,
+                        ),
+                        compact = true,
                     )
+
                     when (val state = uploadState) {
                         LoadState.Loading -> CircularProgressIndicator()
                         is LoadState.Error -> Text(state.message, color = MaterialTheme.colorScheme.error)
-                        is LoadState.Success -> Text(state.data, color = MaterialTheme.colorScheme.primary)
+                        is LoadState.Success -> Text(state.data, color = BlueAccent)
                     }
+
                     Button(
                         onClick = {
                             viewModel.uploadBeat(
@@ -197,36 +255,8 @@ fun AddBeatScreen(
                         modifier = Modifier.fillMaxWidth(),
                         enabled = draft.canSave,
                     ) {
-                        Text("Загрузить бит на сервер")
+                        Text("Загрузить бит")
                     }
-                }
-            }
-        }
-
-        item {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        text = "Предпросмотр карточки",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    BeatCard(
-                        beat = BeatCardUi(
-                            id = "preview-draft",
-                            title = draft.title.ifBlank { "Новый бит" },
-                            genre = draft.genre.ifBlank { "Жанр" },
-                            bpm = draft.bpm.toIntOrNull() ?: 0,
-                            priceRubles = draft.priceRubles.toIntOrNull() ?: 0,
-                            coverImageFileName = draft.coverImageFileName.ifBlank { "square-cover.jpg" },
-                            audioPreviewUrl = null,
-                            localCoverUri = coverUriString,
-                            description = draft.description.ifBlank { "Описание будущего релиза появится здесь." },
-                            plays = 0,
-                        )
-                    )
                 }
             }
         }

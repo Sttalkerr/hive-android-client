@@ -1,4 +1,4 @@
-package com.hivestudio.ui.screens.beats
+package com.hivestudio.ui.screens.catalog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,15 +29,15 @@ import com.hivestudio.ui.components.ScreenHeader
 import com.hivestudio.ui.model.LoadState
 
 @Composable
-fun BeatsScreen(
-    viewModel: BeatsViewModel = viewModel(),
+fun CatalogScreen(
     onOpenBeat: (String) -> Unit,
+    viewModel: CatalogViewModel = viewModel(),
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(query) {
-        viewModel.loadBeats(query.ifBlank { null })
+        viewModel.loadCatalog(query.ifBlank { null })
     }
 
     LazyVerticalGrid(
@@ -47,7 +48,10 @@ fun BeatsScreen(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
-            ScreenHeader(title = "Мои биты")
+            ScreenHeader(
+                title = "Каталог",
+                subtitle = "Все биты продюсеров Hive Studio. Поиск работает по названию и жанру.",
+            )
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
@@ -55,13 +59,8 @@ fun BeatsScreen(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
-                leadingIcon = {
-                    androidx.compose.material3.Icon(
-                        imageVector = Icons.Outlined.Search,
-                        contentDescription = null,
-                    )
-                },
-                label = { Text("Поиск") },
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                label = { Text("Поиск по каталогу") },
                 singleLine = true,
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
             )

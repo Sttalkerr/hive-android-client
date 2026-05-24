@@ -76,8 +76,16 @@ class SettingsViewModel(
                 val profile = authRepository.loadProfile()
                 LoadState.Success(
                     ProfileUi(
+                        id = profile.id,
                         email = profile.email,
                         stageName = profile.stageName,
+                        bio = profile.bio,
+                        city = profile.city,
+                        contactTag = profile.contactTag,
+                        avatarUrl = profile.avatarUrl,
+                        beatsCount = profile.beatsCount,
+                        totalPlays = profile.totalPlays,
+                        totalRevenue = profile.totalRevenue.toInt(),
                         createdAt = profile.createdAt,
                     )
                 )

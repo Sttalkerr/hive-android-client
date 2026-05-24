@@ -10,5 +10,6 @@ data class AuthResponseDto(
     val id: String,
     val email: String,
     val stageName: String,
+    val avatarUrl: String?,
     val token: String,
 )

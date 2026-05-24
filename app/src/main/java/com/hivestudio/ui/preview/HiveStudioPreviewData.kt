@@ -1,19 +1,22 @@
 package com.hivestudio.ui.preview
 
 import com.hivestudio.ui.model.BeatCardUi
+import com.hivestudio.ui.model.AnalyticsMetricType
 import com.hivestudio.ui.model.DashboardMetricUi
 
 object HiveStudioPreviewData {
     val dashboardMetrics = listOf(
-        DashboardMetricUi("Прослушивания", "200", "За последние 7 дней"),
-        DashboardMetricUi("Лайки", "58", "Рост интереса к каталогу"),
-        DashboardMetricUi("Покупки", "13", "Учебные покупки лицензий"),
-        DashboardMetricUi("Выручка", "36 870 ₽", "Сумма по всем битам"),
+        DashboardMetricUi(AnalyticsMetricType.Plays, "Прослушивания", "200"),
+        DashboardMetricUi(AnalyticsMetricType.Likes, "Лайки", "58"),
+        DashboardMetricUi(AnalyticsMetricType.Purchases, "Покупки", "13"),
+        DashboardMetricUi(AnalyticsMetricType.Revenue, "Выручка", "36 870 ₽"),
     )
 
     val beats = listOf(
         BeatCardUi(
             id = "preview-1",
+            producerId = "producer-preview",
+            producerStageName = "Hive Demo",
             title = "Midnight Pulse",
             genre = "Trap",
             bpm = 140,
@@ -26,6 +29,8 @@ object HiveStudioPreviewData {
         ),
         BeatCardUi(
             id = "preview-2",
+            producerId = "producer-preview",
+            producerStageName = "Hive Demo",
             title = "Velvet Echo",
             genre = "R&B",
             bpm = 96,

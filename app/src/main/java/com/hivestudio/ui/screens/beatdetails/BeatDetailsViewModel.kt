@@ -32,6 +32,18 @@ class BeatDetailsViewModel(
     fun simulatePlay(beatId: String) = simulateAndReload(beatId) { repository.simulatePlay(beatId) }
     fun simulateLike(beatId: String) = simulateAndReload(beatId) { repository.simulateLike(beatId) }
     fun simulatePurchase(beatId: String) = simulateAndReload(beatId) { repository.simulatePurchase(beatId) }
+    fun deleteBeat(beatId: String, onDeleted: () -> Unit) {
+        viewModelScope.launch {
+            runCatching {
+                repository.deleteBeat(beatId)
+                CatalogRefreshBus.notifyChanged()
+            }.onSuccess {
+                onDeleted()
+            }.onFailure {
+                _state.value = LoadState.Error(it.toUserMessage("Не удалось удалить бит"))
+            }
+        }
+    }
 
     private fun simulateAndReload(beatId: String, action: suspend () -> Unit) {
         viewModelScope.launch {

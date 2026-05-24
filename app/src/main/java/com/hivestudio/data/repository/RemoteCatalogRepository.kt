@@ -3,11 +3,19 @@ package com.hivestudio.data.repository
 import com.hivestudio.data.remote.HiveStudioApi
 import com.hivestudio.data.remote.ApiConfig
 import com.hivestudio.data.remote.HiveStudioApiFactory
+import com.hivestudio.data.remote.model.BeatDto
+import com.hivestudio.data.remote.model.BeatHistoryPointDto
+import com.hivestudio.data.remote.model.BeatStatisticsDto
+import com.hivestudio.data.session.SessionStore
+import com.hivestudio.ui.format.RubleFormatter
+import com.hivestudio.ui.model.AnalyticsMetricType
 import com.hivestudio.ui.model.BeatCardUi
 import com.hivestudio.ui.model.BeatDetailsUi
-import com.hivestudio.ui.model.DashboardOverviewUi
 import com.hivestudio.ui.model.BeatHistoryPointUi
+import com.hivestudio.ui.model.DashboardOverviewUi
 import com.hivestudio.ui.model.DashboardMetricUi
+import com.hivestudio.ui.model.MetricTrendPointUi
+import com.hivestudio.ui.model.MetricTrendUi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -21,18 +29,17 @@ class RemoteCatalogRepository(
         beats.map { beat ->
             async {
                 val stats = api.getStatistics(beat.id)
-                BeatCardUi(
-                    id = beat.id,
-                    title = beat.title,
-                    genre = beat.genre,
-                    bpm = beat.bpm,
-                    priceRubles = beat.price.roundToInt(),
-                    coverImageFileName = beat.coverImageFileName,
-                    audioPreviewUrl = beat.mp3Url.toAbsoluteApiUrl(),
-                    coverImageUrl = beat.coverImageUrl.toAbsoluteApiUrl(),
-                    description = beat.description,
-                    plays = stats.playsCount,
-                )
+                beat.toBeatCardUi(stats)
+            }
+        }.awaitAll()
+    }
+
+    suspend fun loadCatalogBeatCards(query: String?): List<BeatCardUi> = coroutineScope {
+        val beats = api.getCatalogBeats(query)
+        beats.map { beat ->
+            async {
+                val stats = api.getCatalogStatistics(beat.id)
+                beat.toBeatCardUi(stats)
             }
         }.awaitAll()
     }
@@ -49,10 +56,10 @@ class RemoteCatalogRepository(
         val totalRevenue = statsList.sumOf { it.revenueTotal }.roundToInt()
 
         listOf(
-            DashboardMetricUi("Прослушивания", totalPlays.toString(), "Сумма по всем битам"),
-            DashboardMetricUi("Лайки", totalLikes.toString(), "Реальные данные с сервера"),
-            DashboardMetricUi("Покупки", totalPurchases.toString(), "События simulate/purchase"),
-            DashboardMetricUi("Выручка", formatRubles(totalRevenue), "Расчёт по серверной статистике"),
+            DashboardMetricUi(AnalyticsMetricType.Plays, "Прослушивания", totalPlays.toString()),
+            DashboardMetricUi(AnalyticsMetricType.Likes, "Лайки", totalLikes.toString()),
+            DashboardMetricUi(AnalyticsMetricType.Purchases, "Покупки", totalPurchases.toString()),
+            DashboardMetricUi(AnalyticsMetricType.Revenue, "Выручка", formatRubles(totalRevenue)),
         )
     }
 
@@ -72,40 +79,21 @@ class RemoteCatalogRepository(
     }
 
     suspend fun loadBeatDetails(beatId: String): BeatDetailsUi = coroutineScope {
-        val beatDeferred = async { api.getBeat(beatId) }
-        val statsDeferred = async { api.getStatistics(beatId) }
-        val historyDeferred = async { api.getHistory(beatId) }
+        val beatDeferred = async { api.getCatalogBeat(beatId) }
+        val statsDeferred = async { api.getCatalogStatistics(beatId) }
+        val historyDeferred = async { api.getCatalogHistory(beatId) }
 
         val beat = beatDeferred.await()
         val stats = statsDeferred.await()
         val history = historyDeferred.await()
 
         BeatDetailsUi(
-            beat = BeatCardUi(
-                id = beat.id,
-                title = beat.title,
-                genre = beat.genre,
-                bpm = beat.bpm,
-                priceRubles = beat.price.roundToInt(),
-                coverImageFileName = beat.coverImageFileName,
-                audioPreviewUrl = beat.mp3Url.toAbsoluteApiUrl(),
-                coverImageUrl = beat.coverImageUrl.toAbsoluteApiUrl(),
-                description = beat.description,
-                plays = stats.playsCount,
-            ),
+            beat = beat.toBeatCardUi(stats),
             likesCount = stats.likesCount,
             purchasesCount = stats.purchasesCount,
             revenueRubles = stats.revenueTotal.roundToInt(),
             updatedAt = stats.updatedAt,
-            history = history.map { point ->
-                BeatHistoryPointUi(
-                    dateLabel = point.date.substringAfterLast("-"),
-                    playsCount = point.playsCount,
-                    likesCount = point.likesCount,
-                    purchasesCount = point.purchasesCount,
-                    revenueRubles = point.revenueTotal.roundToInt(),
-                )
-            },
+            history = history.map { it.toBeatHistoryPointUi() },
         )
     }
 
@@ -121,8 +109,96 @@ class RemoteCatalogRepository(
         api.simulatePurchase(beatId)
     }
 
-    private fun formatRubles(amount: Int): String = "${amount.toString().reversed().chunked(3).joinToString(" ").reversed()} ₽"
+    suspend fun loadMetricTrend(metricType: AnalyticsMetricType): MetricTrendUi = coroutineScope {
+        val beats = api.getBeats()
+        val histories = beats.map { beat ->
+            async { api.getHistory(beat.id) }
+        }.awaitAll()
+
+        val aggregated = linkedMapOf<String, AggregatePoint>()
+        histories.flatten().forEach { point ->
+            val current = aggregated.getOrPut(point.date) { AggregatePoint() }
+            current.plays += point.playsCount
+            current.likes += point.likesCount
+            current.purchases += point.purchasesCount
+            current.revenue += point.revenueTotal
+        }
+
+        val points = aggregated.entries.map { (date, point) ->
+            MetricTrendPointUi(
+                label = date.substringAfterLast("-"),
+                value = point.valueFor(metricType).toFloat(),
+                formattedValue = point.formattedValueFor(metricType),
+            )
+        }
+        val totalNumeric = points.sumOf { it.value.toInt() }
+
+        MetricTrendUi(
+            type = metricType,
+            title = metricType.title,
+            totalValue = when (metricType) {
+                AnalyticsMetricType.Revenue -> RubleFormatter.format(points.sumOf { it.formattedValue.removeSuffix(" ₽").replace(" ", "").toIntOrNull() ?: 0 })
+                else -> totalNumeric.toString()
+            },
+            points = points,
+        )
+    }
+
+    private fun formatRubles(amount: Int): String = RubleFormatter.format(amount)
 
     private fun String.toAbsoluteApiUrl(): String =
         if (startsWith("http://") || startsWith("https://")) this else "${ApiConfig.BASE_URL}${removePrefix("/")}"
+
+    private fun BeatDto.toBeatCardUi(
+        stats: BeatStatisticsDto,
+    ): BeatCardUi =
+        BeatCardUi(
+            id = id,
+            producerId = producerId,
+            producerStageName = producerStageName,
+            producerAvatarUrl = producerAvatarUrl.toAbsoluteApiUrlOrNull(),
+            isOwnedBySession = producerId == SessionStore.currentProducerId,
+            title = title,
+            genre = genre,
+            bpm = bpm,
+            priceRubles = price.roundToInt(),
+            coverImageFileName = coverImageFileName,
+            audioPreviewUrl = mp3Url.toAbsoluteApiUrl(),
+            coverImageUrl = coverImageUrl.toAbsoluteApiUrl(),
+            description = description,
+            plays = stats.playsCount,
+        )
+
+    private fun BeatHistoryPointDto.toBeatHistoryPointUi(): BeatHistoryPointUi =
+        BeatHistoryPointUi(
+            dateLabel = date.substringAfterLast("-"),
+            playsCount = playsCount,
+            likesCount = likesCount,
+            purchasesCount = purchasesCount,
+            revenueRubles = revenueTotal.roundToInt(),
+        )
+
+    private fun String?.toAbsoluteApiUrlOrNull(): String? =
+        this?.takeIf { it.isNotBlank() }?.toAbsoluteApiUrl()
+
+    private class AggregatePoint(
+        var plays: Int = 0,
+        var likes: Int = 0,
+        var purchases: Int = 0,
+        var revenue: Double = 0.0,
+    ) {
+        fun valueFor(metricType: AnalyticsMetricType): Int =
+            when (metricType) {
+                AnalyticsMetricType.Plays -> plays
+                AnalyticsMetricType.Likes -> likes
+                AnalyticsMetricType.Purchases -> purchases
+                AnalyticsMetricType.Revenue -> revenue.roundToInt()
+            }
+
+        fun formattedValueFor(metricType: AnalyticsMetricType): String =
+            when (metricType) {
+                AnalyticsMetricType.Revenue -> RubleFormatter.format(revenue.roundToInt())
+                else -> valueFor(metricType).toString()
+            }
+    }
 }

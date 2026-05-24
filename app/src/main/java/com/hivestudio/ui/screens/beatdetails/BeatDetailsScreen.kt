@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hivestudio.ui.model.AnalyticsMetricType
 import com.hivestudio.ui.components.BeatHistorySection
 import com.hivestudio.ui.components.BeatDetailsHeroPanel
 import com.hivestudio.ui.components.BeatQuickActionsPanel
@@ -31,6 +32,7 @@ import com.hivestudio.ui.model.LoadState
 fun BeatDetailsScreen(
     beatId: String,
     viewModel: BeatDetailsViewModel = viewModel(),
+    onDeleted: () -> Unit = {},
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
     val context = LocalContext.current
@@ -85,10 +87,10 @@ fun BeatDetailsScreen(
                 }
 
                 val metrics = listOf(
-                    DashboardMetricUi("Прослушивания", current.data.beat.plays.toString(), "Суммарно по биту"),
-                    DashboardMetricUi("Лайки", current.data.likesCount.toString(), "Текущий интерес"),
-                    DashboardMetricUi("Покупки", current.data.purchasesCount.toString(), "Конверсия в сделки"),
-                    DashboardMetricUi("Выручка", "${current.data.revenueRubles} ₽", "Обновлено: ${current.data.updatedAt}"),
+                    DashboardMetricUi(AnalyticsMetricType.Plays, "Прослушивания", current.data.beat.plays.toString()),
+                    DashboardMetricUi(AnalyticsMetricType.Likes, "Лайки", current.data.likesCount.toString()),
+                    DashboardMetricUi(AnalyticsMetricType.Purchases, "Покупки", current.data.purchasesCount.toString()),
+                    DashboardMetricUi(AnalyticsMetricType.Revenue, "Выручка", "${current.data.revenueRubles} ₽"),
                 )
 
                 items(metrics.chunked(2).size) { rowIndex ->
@@ -107,12 +109,15 @@ fun BeatDetailsScreen(
                     }
                 }
 
-                item {
-                    BeatQuickActionsPanel(
-                        onPlay = { viewModel.simulatePlay(beatId) },
-                        onLike = { viewModel.simulateLike(beatId) },
-                        onPurchase = { viewModel.simulatePurchase(beatId) },
-                    )
+                if (current.data.beat.isOwnedBySession) {
+                    item {
+                        BeatQuickActionsPanel(
+                            onPlay = { viewModel.simulatePlay(beatId) },
+                            onLike = { viewModel.simulateLike(beatId) },
+                            onPurchase = { viewModel.simulatePurchase(beatId) },
+                            onDelete = { viewModel.deleteBeat(beatId, onDeleted) },
+                        )
+                    }
                 }
             }
         }
