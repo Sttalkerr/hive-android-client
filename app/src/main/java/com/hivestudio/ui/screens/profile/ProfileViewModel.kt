@@ -34,6 +34,16 @@ class ProfileViewModel(
         } else {
             _profileState.value = LoadState.Error("Выполни вход, чтобы открыть профиль продюсера")
         }
+        viewModelScope.launch {
+            CatalogRefreshBus.flow.collect {
+                if (authRepository.hasActiveSession()) {
+                    refreshProfile()
+                } else {
+                    _hasSession.value = false
+                    _profileState.value = LoadState.Error("Выполни вход, чтобы открыть профиль продюсера")
+                }
+            }
+        }
     }
 
     fun refreshProfile() {
@@ -44,6 +54,7 @@ class ProfileViewModel(
         }
 
         viewModelScope.launch {
+            _hasSession.value = true
             _profileState.value = LoadState.Loading
             _profileState.value = runCatching {
                 LoadState.Success(authRepository.loadProfile().toProfileUi())
