@@ -4,12 +4,15 @@ import com.hivestudio.data.remote.model.AuthRequestDto
 import com.hivestudio.data.remote.model.AuthResponseDto
 import com.hivestudio.data.remote.model.BeatDto
 import com.hivestudio.data.remote.model.BeatStatisticsDto
-import com.hivestudio.data.remote.model.CreateBeatRequestDto
 import com.hivestudio.data.remote.model.ProfileDto
 import com.hivestudio.data.remote.model.SimulationResponseDto
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -32,9 +35,16 @@ interface HiveStudioApi {
         @Query("query") query: String? = null,
     ): List<BeatDto>
 
+    @Multipart
     @POST("api/v1/beats")
     suspend fun createBeat(
-        @Body request: CreateBeatRequestDto,
+        @Part("title") title: RequestBody,
+        @Part("genre") genre: RequestBody,
+        @Part("bpm") bpm: RequestBody,
+        @Part("price") price: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part mp3: MultipartBody.Part,
+        @Part coverImage: MultipartBody.Part,
     ): BeatDto
 
     @GET("api/v1/beats/{beatId}/stats")

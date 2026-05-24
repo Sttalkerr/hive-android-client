@@ -1,6 +1,7 @@
 package com.hivestudio.data.repository
 
 import com.hivestudio.data.remote.HiveStudioApi
+import com.hivestudio.data.remote.ApiConfig
 import com.hivestudio.data.remote.HiveStudioApiFactory
 import com.hivestudio.ui.model.BeatCardUi
 import com.hivestudio.ui.model.DashboardMetricUi
@@ -23,6 +24,7 @@ class RemoteCatalogRepository(
                     bpm = beat.bpm,
                     priceRubles = beat.price.roundToInt(),
                     coverImageFileName = beat.coverImageFileName,
+                    coverImageUrl = "${ApiConfig.BASE_URL}uploads/${beat.coverImageFileName}",
                     description = beat.description,
                     plays = stats.playsCount,
                 )
