@@ -1,11 +1,12 @@
 package com.hivestudio.ui.screens.auth
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -21,10 +22,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hivestudio.ui.components.ScreenHeader
 
 @Composable
 fun AuthScreen(
@@ -46,20 +49,25 @@ fun AuthScreen(
         repeatPassword.isNotBlank() &&
         repeatPassword == password
 
-    LazyColumn(
+    Column(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.Center,
     ) {
-        item {
-            ScreenHeader(
-                title = "Профиль продюсера",
-                subtitle = "Отдельный экран входа и регистрации для работы с личной аналитикой, своими битами и загрузкой релизов.",
-                centered = true,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Text(
+                text = "Hive Studio",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
             )
-        }
 
-        item {
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                 AuthMode.entries.forEachIndexed { index, authMode ->
                     SegmentedButton(
@@ -74,23 +82,12 @@ fun AuthScreen(
                     }
                 }
             }
-        }
 
-        item {
             Card(modifier = Modifier.fillMaxWidth()) {
-                androidx.compose.foundation.layout.Column(
+                Column(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(
-                        text = if (mode == AuthMode.Login) "Вход" else "Регистрация",
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    Text(
-                        text = "Тестовый доступ: producer@hivestudio.dev / secret123",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
@@ -103,28 +100,30 @@ fun AuthScreen(
                         onValueChange = { password = it },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Пароль") },
+                        visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                     )
 
                     if (mode == AuthMode.Register) {
                         OutlinedTextField(
-                            value = stageName,
-                            onValueChange = { stageName = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Сценическое имя") },
-                            singleLine = true,
-                        )
-                        OutlinedTextField(
                             value = repeatPassword,
                             onValueChange = { repeatPassword = it },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Повтор пароля") },
+                            visualTransformation = PasswordVisualTransformation(),
                             singleLine = true,
                             supportingText = {
                                 if (repeatPassword.isNotBlank() && repeatPassword != password) {
                                     Text("Пароли должны совпадать")
                                 }
                             },
+                        )
+                        OutlinedTextField(
+                            value = stageName,
+                            onValueChange = { stageName = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Никнейм") },
+                            singleLine = true,
                         )
                     }
 

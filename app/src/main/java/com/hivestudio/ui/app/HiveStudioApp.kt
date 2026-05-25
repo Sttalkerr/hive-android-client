@@ -33,6 +33,7 @@ import com.hivestudio.ui.screens.dashboard.DashboardScreen
 import com.hivestudio.ui.screens.editbeat.EditBeatScreen
 import com.hivestudio.ui.screens.metricdetails.MetricDetailsScreen
 import com.hivestudio.ui.model.AnalyticsMetricType
+import com.hivestudio.ui.screens.profile.EditProfileScreen
 import com.hivestudio.ui.screens.profile.ProfileScreen
 
 @Composable
@@ -113,7 +114,13 @@ fun HiveStudioApp() {
             composable(BottomDestination.Profile.route) {
                 ProfileScreen(
                     onOpenAuth = { navController.navigate("auth") },
+                    onOpenEditProfile = { navController.navigate("edit_profile") },
+                )
+            }
+            composable("edit_profile") {
+                EditProfileScreen(
                     onOpenAddBeat = { navController.navigate("add_beat") },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable("auth") {
