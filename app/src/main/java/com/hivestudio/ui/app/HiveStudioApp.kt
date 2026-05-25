@@ -41,16 +41,24 @@ fun HiveStudioApp() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val bottomRoutes = BottomDestination.entries.map(BottomDestination::route).toSet()
-    val showBottomBar = currentDestination?.route in bottomRoutes
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            if (!showBottomBar) return@Scaffold
             NavigationBar {
                 BottomDestination.entries.forEach { destination ->
-                    val selected = currentDestination
+                    val currentRoute = currentDestination?.route
+                    val selected = when (destination) {
+                        BottomDestination.Catalog -> currentRoute == BottomDestination.Catalog.route
+                        BottomDestination.Dashboard -> currentRoute == BottomDestination.Dashboard.route ||
+                            currentRoute?.startsWith("metric/") == true
+                        BottomDestination.Beats -> currentRoute == BottomDestination.Beats.route ||
+                            currentRoute == "add_beat" ||
+                            currentRoute?.startsWith("edit_beat/") == true
+                        BottomDestination.Profile -> currentRoute == BottomDestination.Profile.route ||
+                            currentRoute == "auth" ||
+                            currentRoute == "edit_profile"
+                    } || currentDestination
                         ?.hierarchy
                         ?.any { it.route == destination.route } == true
 
@@ -106,6 +114,9 @@ fun HiveStudioApp() {
             }
             composable(BottomDestination.Beats.route) {
                 BeatsScreen(
+                    onOpenAddBeat = {
+                        navController.navigate("add_beat")
+                    },
                     onOpenBeat = { beatId ->
                         navController.navigate("beat/$beatId")
                     }
@@ -119,7 +130,6 @@ fun HiveStudioApp() {
             }
             composable("edit_profile") {
                 EditProfileScreen(
-                    onOpenAddBeat = { navController.navigate("add_beat") },
                     onBack = { navController.popBackStack() },
                 )
             }

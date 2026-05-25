@@ -4,42 +4,39 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hivestudio.ui.components.BeatCard
-import com.hivestudio.ui.components.BeatSortSelector
 import com.hivestudio.ui.components.ScreenHeader
-import com.hivestudio.ui.model.BeatSortType
 import com.hivestudio.ui.model.LoadState
 
 @Composable
 fun BeatsScreen(
     viewModel: BeatsViewModel = viewModel(),
+    onOpenAddBeat: () -> Unit,
     onOpenBeat: (String) -> Unit,
 ) {
-    var query by rememberSaveable { mutableStateOf("") }
-    var sortType by rememberSaveable { mutableStateOf(BeatSortType.Newest) }
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(query) {
-        viewModel.loadBeats(query.ifBlank { null })
+    LaunchedEffect(Unit) {
+        viewModel.loadBeats(query = null)
     }
 
     LazyVerticalGrid(
@@ -50,35 +47,22 @@ fun BeatsScreen(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
-            ScreenHeader(title = "Мои биты")
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
+            androidx.compose.foundation.layout.Row(
                 modifier = Modifier.fillMaxWidth(),
-                leadingIcon = {
-                    androidx.compose.material3.Icon(
-                        imageVector = Icons.Outlined.Search,
-                        contentDescription = null,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ScreenHeader(title = "Мои биты")
+                FilledIconButton(
+                    onClick = onOpenAddBeat,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = "Создать бит",
                     )
-                },
-                label = { Text("Поиск") },
-                singleLine = true,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-            )
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            BeatSortSelector(
-                selected = sortType,
-                onSelected = {
-                    sortType = it
-                    viewModel.updateSort(it)
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
+                }
+            }
         }
 
         when (val current = state) {

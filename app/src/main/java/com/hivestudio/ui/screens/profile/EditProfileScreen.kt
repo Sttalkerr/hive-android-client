@@ -34,7 +34,6 @@ import com.hivestudio.ui.model.LoadState
 
 @Composable
 fun EditProfileScreen(
-    onOpenAddBeat: () -> Unit,
     onBack: () -> Unit,
     viewModel: ProfileViewModel = viewModel(),
 ) {
@@ -104,13 +103,6 @@ fun EditProfileScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Text("Сменить аватар")
-                            }
-
-                            Button(
-                                onClick = onOpenAddBeat,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text("Добавить бит")
                             }
                         }
                     }
