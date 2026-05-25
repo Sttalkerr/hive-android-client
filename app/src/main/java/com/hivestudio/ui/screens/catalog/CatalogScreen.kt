@@ -25,8 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hivestudio.ui.components.BeatCard
+import com.hivestudio.ui.components.BeatGenreFilterSelector
+import com.hivestudio.ui.components.BeatPriceFilterSelector
 import com.hivestudio.ui.components.BeatSortSelector
 import com.hivestudio.ui.components.ScreenHeader
+import com.hivestudio.ui.model.BeatPriceFilter
 import com.hivestudio.ui.model.BeatSortType
 import com.hivestudio.ui.model.LoadState
 
@@ -37,7 +40,10 @@ fun CatalogScreen(
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var sortType by rememberSaveable { mutableStateOf(BeatSortType.Newest) }
+    var selectedGenre by rememberSaveable { mutableStateOf<String?>(null) }
+    var priceFilter by rememberSaveable { mutableStateOf(BeatPriceFilter.Any) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val genres by viewModel.availableGenres.collectAsStateWithLifecycle()
 
     LaunchedEffect(query) {
         viewModel.loadCatalog(query.ifBlank { null })
@@ -75,6 +81,29 @@ fun CatalogScreen(
                 onSelected = {
                     sortType = it
                     viewModel.updateSort(it)
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            BeatGenreFilterSelector(
+                genres = genres,
+                selectedGenre = selectedGenre,
+                onSelected = {
+                    selectedGenre = it
+                    viewModel.updateGenreFilter(it)
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            BeatPriceFilterSelector(
+                selected = priceFilter,
+                onSelected = {
+                    priceFilter = it
+                    viewModel.updatePriceFilter(it)
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
