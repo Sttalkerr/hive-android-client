@@ -26,3 +26,11 @@ data class CreateBeatRequestDto(
     val mp3FileName: String,
     val coverImageFileName: String,
 )
+
+data class UpdateBeatRequestDto(
+    val title: String,
+    val genre: String,
+    val bpm: Int,
+    val price: Double,
+    val description: String,
+)

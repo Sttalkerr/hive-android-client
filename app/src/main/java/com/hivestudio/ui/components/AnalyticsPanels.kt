@@ -166,6 +166,7 @@ fun BeatQuickActionsPanel(
     onPlay: () -> Unit,
     onLike: () -> Unit,
     onPurchase: () -> Unit,
+    onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -191,6 +192,14 @@ fun BeatQuickActionsPanel(
                 }
                 Button(onClick = onPurchase, modifier = Modifier.weight(1f)) {
                     Text("Sale")
+                }
+            }
+            if (onEdit != null) {
+                OutlinedButton(
+                    onClick = onEdit,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Редактировать бит")
                 }
             }
             if (onDelete != null) {

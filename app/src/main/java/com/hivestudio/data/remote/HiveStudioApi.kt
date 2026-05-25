@@ -7,6 +7,7 @@ import com.hivestudio.data.remote.model.BeatHistoryPointDto
 import com.hivestudio.data.remote.model.BeatStatisticsDto
 import com.hivestudio.data.remote.model.ProfileDto
 import com.hivestudio.data.remote.model.UpdateProfileRequestDto
+import com.hivestudio.data.remote.model.UpdateBeatRequestDto
 import com.hivestudio.data.remote.model.SimulationResponseDto
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -69,6 +70,12 @@ interface HiveStudioApi {
     suspend fun deleteBeat(
         @Path("beatId") beatId: String,
     )
+
+    @PUT("api/v1/beats/{beatId}")
+    suspend fun updateBeat(
+        @Path("beatId") beatId: String,
+        @Body request: UpdateBeatRequestDto,
+    ): BeatDto
 
     @Multipart
     @POST("api/v1/beats")

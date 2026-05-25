@@ -30,6 +30,7 @@ import com.hivestudio.ui.screens.beatdetails.BeatDetailsScreen
 import com.hivestudio.ui.screens.beats.BeatsScreen
 import com.hivestudio.ui.screens.catalog.CatalogScreen
 import com.hivestudio.ui.screens.dashboard.DashboardScreen
+import com.hivestudio.ui.screens.editbeat.EditBeatScreen
 import com.hivestudio.ui.screens.metricdetails.MetricDetailsScreen
 import com.hivestudio.ui.model.AnalyticsMetricType
 import com.hivestudio.ui.screens.profile.ProfileScreen
@@ -130,7 +131,19 @@ fun HiveStudioApp() {
             ) { backStackEntry ->
                 BeatDetailsScreen(
                     beatId = backStackEntry.arguments?.getString("beatId").orEmpty(),
+                    onEdit = { editableBeatId ->
+                        navController.navigate("edit_beat/$editableBeatId")
+                    },
                     onDeleted = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = "edit_beat/{beatId}",
+                arguments = listOf(navArgument("beatId") { type = NavType.StringType }),
+            ) { backStackEntry ->
+                EditBeatScreen(
+                    beatId = backStackEntry.arguments?.getString("beatId").orEmpty(),
+                    onSaved = { navController.popBackStack() },
                 )
             }
             composable(

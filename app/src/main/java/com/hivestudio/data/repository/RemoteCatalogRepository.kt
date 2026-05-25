@@ -6,6 +6,7 @@ import com.hivestudio.data.remote.HiveStudioApiFactory
 import com.hivestudio.data.remote.model.BeatDto
 import com.hivestudio.data.remote.model.BeatHistoryPointDto
 import com.hivestudio.data.remote.model.BeatStatisticsDto
+import com.hivestudio.data.remote.model.UpdateBeatRequestDto
 import com.hivestudio.data.session.SessionStore
 import com.hivestudio.ui.format.RubleFormatter
 import com.hivestudio.ui.model.AnalyticsMetricType
@@ -76,6 +77,28 @@ class RemoteCatalogRepository(
 
     suspend fun deleteBeat(beatId: String) {
         api.deleteBeat(beatId)
+    }
+
+    suspend fun updateBeat(
+        beatId: String,
+        title: String,
+        genre: String,
+        bpm: Int,
+        priceRubles: Int,
+        description: String,
+    ): BeatCardUi {
+        val beat = api.updateBeat(
+            beatId = beatId,
+            request = UpdateBeatRequestDto(
+                title = title.trim(),
+                genre = genre.trim(),
+                bpm = bpm,
+                price = priceRubles.toDouble(),
+                description = description.trim(),
+            )
+        )
+        val stats = api.getStatistics(beat.id)
+        return beat.toBeatCardUi(stats)
     }
 
     suspend fun loadBeatDetails(beatId: String): BeatDetailsUi = coroutineScope {

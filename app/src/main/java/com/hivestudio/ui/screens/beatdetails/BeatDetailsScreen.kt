@@ -32,6 +32,7 @@ import com.hivestudio.ui.model.LoadState
 fun BeatDetailsScreen(
     beatId: String,
     viewModel: BeatDetailsViewModel = viewModel(),
+    onEdit: (String) -> Unit = {},
     onDeleted: () -> Unit = {},
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
@@ -115,6 +116,7 @@ fun BeatDetailsScreen(
                             onPlay = { viewModel.simulatePlay(beatId) },
                             onLike = { viewModel.simulateLike(beatId) },
                             onPurchase = { viewModel.simulatePurchase(beatId) },
+                            onEdit = { onEdit(beatId) },
                             onDelete = { viewModel.deleteBeat(beatId, onDeleted) },
                         )
                     }
