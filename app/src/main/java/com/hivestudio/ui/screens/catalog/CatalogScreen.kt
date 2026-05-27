@@ -14,8 +14,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -228,7 +228,9 @@ fun CatalogScreen(
 
         if (!showHistory) {
             when (val current = state) {
-                LoadState.Loading -> item(span = { GridItemSpan(maxLineSpan) }) { CircularProgressIndicator() }
+                LoadState.Loading -> item(span = { GridItemSpan(maxLineSpan) }) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
                 is LoadState.Error -> item(span = { GridItemSpan(maxLineSpan) }) {
                     androidx.compose.material3.Card(modifier = Modifier.fillMaxWidth()) {
                         Column(

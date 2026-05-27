@@ -29,7 +29,8 @@ import androidx.navigation.navArgument
 import com.hivestudio.data.session.SessionStore
 import com.hivestudio.ui.navigation.BottomDestination
 import com.hivestudio.ui.screens.add.AddBeatScreen
-import com.hivestudio.ui.screens.auth.AuthScreen
+import com.hivestudio.ui.screens.auth.LoginScreen
+import com.hivestudio.ui.screens.auth.RegisterScreen
 import com.hivestudio.ui.screens.beatdetails.BeatDetailsScreen
 import com.hivestudio.ui.screens.beats.BeatsScreen
 import com.hivestudio.ui.screens.catalog.CatalogScreen
@@ -47,13 +48,20 @@ fun HiveStudioApp(
     onThemeChanged: (Boolean) -> Unit,
 ) {
     var hasSession by remember { mutableStateOf(SessionStore.hasActiveSession()) }
+    var authScreen by remember { mutableStateOf(AuthRoute.Login) }
 
     if (!hasSession) {
         HiveStudioTheme(darkTheme = true) {
-            AuthScreen(
-                onSuccess = { hasSession = true },
-                onBack = {},
-            )
+            when (authScreen) {
+                AuthRoute.Login -> LoginScreen(
+                    onSuccess = { hasSession = true },
+                    onOpenRegister = { authScreen = AuthRoute.Register },
+                )
+                AuthRoute.Register -> RegisterScreen(
+                    onSuccess = { hasSession = true },
+                    onOpenLogin = { authScreen = AuthRoute.Login },
+                )
+            }
         }
         return
     }
@@ -143,11 +151,15 @@ fun HiveStudioApp(
             }
             composable(BottomDestination.Profile.route) {
                 ProfileScreen(
-                    onOpenAuth = { hasSession = false },
+                    onOpenAuth = {
+                        authScreen = AuthRoute.Login
+                        hasSession = false
+                    },
                     onOpenEditProfile = { navController.navigate("edit_profile") },
                     darkThemeEnabled = darkThemeEnabled,
                     onThemeChanged = onThemeChanged,
                     onLogout = {
+                        authScreen = AuthRoute.Login
                         hasSession = false
                     },
                 )
@@ -199,4 +211,9 @@ fun HiveStudioApp(
             }
         }
     }
+}
+
+private enum class AuthRoute {
+    Login,
+    Register,
 }

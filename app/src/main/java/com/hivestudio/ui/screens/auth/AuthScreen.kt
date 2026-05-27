@@ -2,18 +2,18 @@ package com.hivestudio.ui.screens.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,27 +30,151 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun AuthScreen(
+fun LoginScreen(
     onSuccess: () -> Unit,
-    onBack: () -> Unit,
+    onOpenRegister: () -> Unit,
     viewModel: AuthViewModel = viewModel(),
 ) {
-    var mode by rememberSaveable { mutableStateOf(AuthMode.Login) }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    var stageName by rememberSaveable { mutableStateOf("") }
-    var repeatPassword by rememberSaveable { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
 
-    val canLogin = email.isNotBlank() && password.isNotBlank()
-    val canRegister = canLogin &&
-        stageName.isNotBlank() &&
-        repeatPassword.isNotBlank() &&
-        repeatPassword == password
+    AuthScreenScaffold {
+        AuthCard(
+            title = "Вход",
+            footerText = "Нет аккаунта?",
+            footerActionLabel = "Регистрация",
+            onFooterAction = onOpenRegister,
+        ) {
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Email") },
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Пароль") },
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+            )
 
+            if (message.isNotBlank()) {
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
+            if (isLoading) {
+                CircularProgressIndicator()
+            }
+
+            Button(
+                onClick = { viewModel.login(email, password, onSuccess) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = email.isNotBlank() && password.isNotBlank(),
+            ) {
+                Text("Войти")
+            }
+        }
+    }
+}
+
+@Composable
+fun RegisterScreen(
+    onSuccess: () -> Unit,
+    onOpenLogin: () -> Unit,
+    viewModel: AuthViewModel = viewModel(),
+) {
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var repeatPassword by rememberSaveable { mutableStateOf("") }
+    var stageName by rememberSaveable { mutableStateOf("") }
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val message by viewModel.message.collectAsStateWithLifecycle()
+
+    AuthScreenScaffold {
+        AuthCard(
+            title = "Регистрация",
+            footerText = "Уже есть аккаунт?",
+            footerActionLabel = "Вход",
+            onFooterAction = onOpenLogin,
+        ) {
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Email") },
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Пароль") },
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = repeatPassword,
+                onValueChange = { repeatPassword = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Повтор пароля") },
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                supportingText = {
+                    if (repeatPassword.isNotBlank() && repeatPassword != password) {
+                        Text("Пароли должны совпадать")
+                    }
+                },
+            )
+            OutlinedTextField(
+                value = stageName,
+                onValueChange = { stageName = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Никнейм") },
+                singleLine = true,
+            )
+
+            if (message.isNotBlank()) {
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
+            if (isLoading) {
+                CircularProgressIndicator()
+            }
+
+            Button(
+                onClick = { viewModel.register(email, password, stageName, onSuccess) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = email.isNotBlank() &&
+                    password.isNotBlank() &&
+                    repeatPassword.isNotBlank() &&
+                    repeatPassword == password &&
+                    stageName.isNotBlank(),
+            ) {
+                Text("Создать профиль")
+            }
+        }
+    }
+}
+
+@Composable
+private fun AuthScreenScaffold(
+    content: @Composable () -> Unit,
+) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.Center,
     ) {
         Column(
@@ -65,108 +189,38 @@ fun AuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
             )
-
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                AuthMode.entries.forEachIndexed { index, authMode ->
-                    SegmentedButton(
-                        selected = mode == authMode,
-                        onClick = { mode = authMode },
-                        shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = AuthMode.entries.size,
-                        ),
-                    ) {
-                        Text(authMode.title)
-                    }
-                }
-            }
-
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Email") },
-                        singleLine = true,
-                    )
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Пароль") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                    )
-
-                    if (mode == AuthMode.Register) {
-                        OutlinedTextField(
-                            value = repeatPassword,
-                            onValueChange = { repeatPassword = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Повтор пароля") },
-                            visualTransformation = PasswordVisualTransformation(),
-                            singleLine = true,
-                            supportingText = {
-                                if (repeatPassword.isNotBlank() && repeatPassword != password) {
-                                    Text("Пароли должны совпадать")
-                                }
-                            },
-                        )
-                        OutlinedTextField(
-                            value = stageName,
-                            onValueChange = { stageName = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Никнейм") },
-                            singleLine = true,
-                        )
-                    }
-
-                    if (message.isNotBlank()) {
-                        Text(
-                            text = message,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-
-                    if (isLoading) {
-                        CircularProgressIndicator()
-                    }
-
-                    Button(
-                        onClick = {
-                            if (mode == AuthMode.Login) {
-                                viewModel.login(email, password, onSuccess)
-                            } else {
-                                viewModel.register(email, password, stageName, onSuccess)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = if (mode == AuthMode.Login) canLogin else canRegister,
-                    ) {
-                        Text(if (mode == AuthMode.Login) "Войти" else "Создать профиль")
-                    }
-
-                    TextButton(
-                        onClick = onBack,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text("Назад")
-                    }
-                }
-            }
+            content()
         }
     }
 }
 
-private enum class AuthMode(
-    val title: String,
+@Composable
+private fun AuthCard(
+    title: String,
+    footerText: String,
+    footerActionLabel: String,
+    onFooterAction: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
-    Login("Вход"),
-    Register("Регистрация"),
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+            )
+            content()
+            TextButton(
+                onClick = onFooterAction,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("$footerText $footerActionLabel")
+            }
+        }
+    }
 }
