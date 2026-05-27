@@ -30,7 +30,7 @@ fun DashboardMetricCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (emphasized) BlueAccent.copy(alpha = 0.18f) else GraphiteSoft,
+            containerColor = GraphiteSoft,
         ),
         onClick = onClick ?: {},
         enabled = onClick != null,
@@ -42,12 +42,13 @@ fun DashboardMetricCard(
             Text(
                 text = metric.type.shortLabel,
                 style = MaterialTheme.typography.labelLarge,
-                color = if (emphasized) MaterialTheme.colorScheme.onSurface else BlueAccentSoft,
+                color = BlueAccentSoft,
             )
             Text(
                 text = metric.value,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
+                color = BlueAccentSoft,
             )
         }
     }
