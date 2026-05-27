@@ -13,6 +13,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +27,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.hivestudio.data.session.SessionEvent
+import com.hivestudio.data.session.SessionEventBus
 import com.hivestudio.data.session.SessionStore
 import com.hivestudio.ui.navigation.BottomDestination
 import com.hivestudio.ui.screens.add.AddBeatScreen
@@ -69,6 +72,15 @@ fun HiveStudioApp(
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry.value?.destination
+
+    LaunchedEffect(Unit) {
+        SessionEventBus.events.collect { event ->
+            if (event == SessionEvent.LoginRequired) {
+                authScreen = AuthRoute.Login
+                hasSession = false
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

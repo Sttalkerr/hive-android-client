@@ -211,17 +211,17 @@ fun CatalogScreen(
                 }
             }
 
-            items(searchHistory, span = { GridItemSpan(maxLineSpan) }, key = { it.beatId }) { entry ->
+            items(searchHistory, span = { GridItemSpan(maxLineSpan) }, key = { it }) { entry ->
                 Button(
                     onClick = {
-                        query = entry.title
+                        query = entry
                         focusManager.clearFocus()
                         keyboardController?.hide()
                         isSearchFocused = false
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("${entry.title} • ${entry.producerStageName}")
+                    Text(entry)
                 }
             }
         }
@@ -266,7 +266,7 @@ fun CatalogScreen(
                             beat = beat,
                             compact = true,
                             onOpenClick = {
-                                viewModel.saveHistory(beat)
+                                viewModel.saveHistory(query)
                                 onOpenBeat(beat.id)
                             },
                         )

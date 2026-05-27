@@ -2,7 +2,6 @@ package com.hivestudio.ui.screens.catalog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hivestudio.data.preferences.SearchHistoryEntry
 import com.hivestudio.data.preferences.SearchHistoryStore
 import com.hivestudio.data.remote.toUserMessage
 import com.hivestudio.data.repository.CatalogRefreshBus
@@ -25,7 +24,7 @@ class CatalogViewModel(
     private val _availableGenres = MutableStateFlow<List<String>>(emptyList())
     val availableGenres: StateFlow<List<String>> = _availableGenres.asStateFlow()
     private val _searchHistory = MutableStateFlow(SearchHistoryStore.getEntries())
-    val searchHistory: StateFlow<List<SearchHistoryEntry>> = _searchHistory.asStateFlow()
+    val searchHistory: StateFlow<List<String>> = _searchHistory.asStateFlow()
     private var currentQuery: String? = null
     private var currentSort: BeatSortType = BeatSortType.Newest
     private var currentGenre: String? = null
@@ -76,14 +75,8 @@ class CatalogViewModel(
         applyCurrentFilters()
     }
 
-    fun saveHistory(beat: BeatCardUi) {
-        SearchHistoryStore.saveEntry(
-            SearchHistoryEntry(
-                beatId = beat.id,
-                title = beat.title,
-                producerStageName = beat.producerStageName,
-            )
-        )
+    fun saveHistory(query: String) {
+        SearchHistoryStore.saveEntry(query)
         _searchHistory.value = SearchHistoryStore.getEntries()
     }
 

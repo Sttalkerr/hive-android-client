@@ -19,17 +19,19 @@ object SearchHistoryStore {
         preferences = context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
     }
 
-    fun getEntries(): List<SearchHistoryEntry> {
+    fun getEntries(): List<String> {
         val raw = requirePreferences().getString(keyEntries, null).orEmpty()
         if (raw.isBlank()) return emptyList()
-        val type = object : TypeToken<List<SearchHistoryEntry>>() {}.type
-        return runCatching { gson.fromJson<List<SearchHistoryEntry>>(raw, type) }.getOrElse { emptyList() }
+        val type = object : TypeToken<List<String>>() {}.type
+        return runCatching { gson.fromJson<List<String>>(raw, type) }.getOrElse { emptyList() }
     }
 
-    fun saveEntry(entry: SearchHistoryEntry) {
+    fun saveEntry(entry: String) {
+        val normalized = entry.trim()
+        if (normalized.isBlank()) return
         val updated = buildList {
-            add(entry)
-            addAll(getEntries().filterNot { it.beatId == entry.beatId })
+            add(normalized)
+            addAll(getEntries().filterNot { it.equals(normalized, ignoreCase = true) })
         }.take(maxEntries)
         requirePreferences().edit().putString(keyEntries, gson.toJson(updated)).apply()
     }
@@ -41,9 +43,3 @@ object SearchHistoryStore {
     private fun requirePreferences(): SharedPreferences =
         preferences ?: error("SearchHistoryStore is not initialized")
 }
-
-data class SearchHistoryEntry(
-    val beatId: String,
-    val title: String,
-    val producerStageName: String,
-)
