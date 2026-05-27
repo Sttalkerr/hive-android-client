@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hivestudio.ui.components.ProfileAvatar
+import com.hivestudio.ui.components.SettingSwitchCard
 import com.hivestudio.ui.format.RubleFormatter
 import com.hivestudio.ui.model.LoadState
 import com.hivestudio.ui.model.ProfileUi
@@ -31,6 +32,9 @@ import com.hivestudio.ui.model.ProfileUi
 fun ProfileScreen(
     onOpenAuth: () -> Unit,
     onOpenEditProfile: () -> Unit,
+    darkThemeEnabled: Boolean,
+    onThemeChanged: (Boolean) -> Unit,
+    onLogout: () -> Unit,
     viewModel: ProfileViewModel = viewModel(),
 ) {
     val profileState by viewModel.profileState.collectAsStateWithLifecycle()
@@ -105,8 +109,20 @@ fun ProfileScreen(
                     }
 
                     item {
+                        SettingSwitchCard(
+                            title = "Тёмная тема",
+                            description = "Переключение оформления приложения.",
+                            checked = darkThemeEnabled,
+                            onCheckedChange = onThemeChanged,
+                        )
+                    }
+
+                    item {
                         Button(
-                            onClick = viewModel::logout,
+                            onClick = {
+                                viewModel.logout()
+                                onLogout()
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,

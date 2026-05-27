@@ -62,7 +62,6 @@ fun BeatDetailsScreen(
                     item {
                         ScreenHeader(
                             title = "Аналитика бита",
-                            subtitle = "Подробная карточка релиза, история интереса и тестовые действия по статистике.",
                         )
                     }
                 }

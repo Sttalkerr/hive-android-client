@@ -14,6 +14,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -23,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.hivestudio.data.session.SessionStore
 import com.hivestudio.ui.navigation.BottomDestination
 import com.hivestudio.ui.screens.add.AddBeatScreen
 import com.hivestudio.ui.screens.auth.AuthScreen
@@ -35,12 +39,28 @@ import com.hivestudio.ui.screens.metricdetails.MetricDetailsScreen
 import com.hivestudio.ui.model.AnalyticsMetricType
 import com.hivestudio.ui.screens.profile.EditProfileScreen
 import com.hivestudio.ui.screens.profile.ProfileScreen
+import com.hivestudio.ui.theme.HiveStudioTheme
 
 @Composable
-fun HiveStudioApp() {
+fun HiveStudioApp(
+    darkThemeEnabled: Boolean,
+    onThemeChanged: (Boolean) -> Unit,
+) {
+    var hasSession by remember { mutableStateOf(SessionStore.hasActiveSession()) }
+
+    if (!hasSession) {
+        HiveStudioTheme(darkTheme = true) {
+            AuthScreen(
+                onSuccess = { hasSession = true },
+                onBack = {},
+            )
+        }
+        return
+    }
+
     val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val navBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry.value?.destination
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -56,7 +76,6 @@ fun HiveStudioApp() {
                             currentRoute == "add_beat" ||
                             currentRoute?.startsWith("edit_beat/") == true
                         BottomDestination.Profile -> currentRoute == BottomDestination.Profile.route ||
-                            currentRoute == "auth" ||
                             currentRoute == "edit_profile"
                     } || currentDestination
                         ?.hierarchy
@@ -124,18 +143,17 @@ fun HiveStudioApp() {
             }
             composable(BottomDestination.Profile.route) {
                 ProfileScreen(
-                    onOpenAuth = { navController.navigate("auth") },
+                    onOpenAuth = { hasSession = false },
                     onOpenEditProfile = { navController.navigate("edit_profile") },
+                    darkThemeEnabled = darkThemeEnabled,
+                    onThemeChanged = onThemeChanged,
+                    onLogout = {
+                        hasSession = false
+                    },
                 )
             }
             composable("edit_profile") {
                 EditProfileScreen(
-                    onBack = { navController.popBackStack() },
-                )
-            }
-            composable("auth") {
-                AuthScreen(
-                    onSuccess = { navController.popBackStack() },
                     onBack = { navController.popBackStack() },
                 )
             }

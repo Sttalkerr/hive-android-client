@@ -2,6 +2,8 @@ package com.hivestudio.ui.screens.catalog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hivestudio.data.preferences.SearchHistoryEntry
+import com.hivestudio.data.preferences.SearchHistoryStore
 import com.hivestudio.data.remote.toUserMessage
 import com.hivestudio.data.repository.CatalogRefreshBus
 import com.hivestudio.data.repository.RemoteCatalogRepository
@@ -9,6 +11,7 @@ import com.hivestudio.ui.model.BeatCardUi
 import com.hivestudio.ui.model.BeatPriceFilter
 import com.hivestudio.ui.model.BeatSortType
 import com.hivestudio.ui.model.LoadState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,11 +24,14 @@ class CatalogViewModel(
     val state: StateFlow<LoadState<List<BeatCardUi>>> = _state.asStateFlow()
     private val _availableGenres = MutableStateFlow<List<String>>(emptyList())
     val availableGenres: StateFlow<List<String>> = _availableGenres.asStateFlow()
+    private val _searchHistory = MutableStateFlow(SearchHistoryStore.getEntries())
+    val searchHistory: StateFlow<List<SearchHistoryEntry>> = _searchHistory.asStateFlow()
     private var currentQuery: String? = null
     private var currentSort: BeatSortType = BeatSortType.Newest
     private var currentGenre: String? = null
     private var currentPriceFilter: BeatPriceFilter = BeatPriceFilter.Any
     private var sourceBeats: List<BeatCardUi> = emptyList()
+    private var searchJob: Job? = null
 
     init {
         loadCatalog()
@@ -38,7 +44,8 @@ class CatalogViewModel(
 
     fun loadCatalog(query: String? = null) {
         currentQuery = query
-        viewModelScope.launch {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             _state.value = LoadState.Loading
             _state.value = runCatching {
                 sourceBeats = repository.loadCatalogBeatCards(query)
@@ -48,6 +55,10 @@ class CatalogViewModel(
                 LoadState.Error(it.toUserMessage("Не удалось загрузить каталог"))
             }
         }
+    }
+
+    fun retryLastQuery() {
+        loadCatalog(currentQuery)
     }
 
     fun updateSort(sortType: BeatSortType) {
@@ -63,6 +74,22 @@ class CatalogViewModel(
     fun updatePriceFilter(priceFilter: BeatPriceFilter) {
         currentPriceFilter = priceFilter
         applyCurrentFilters()
+    }
+
+    fun saveHistory(beat: BeatCardUi) {
+        SearchHistoryStore.saveEntry(
+            SearchHistoryEntry(
+                beatId = beat.id,
+                title = beat.title,
+                producerStageName = beat.producerStageName,
+            )
+        )
+        _searchHistory.value = SearchHistoryStore.getEntries()
+    }
+
+    fun clearHistory() {
+        SearchHistoryStore.clear()
+        _searchHistory.value = emptyList()
     }
 
     private fun applyCurrentFilters() {
