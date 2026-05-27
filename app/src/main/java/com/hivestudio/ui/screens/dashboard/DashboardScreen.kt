@@ -37,7 +37,6 @@ fun DashboardScreen(
             ScreenHeader(
                 title = "Hive Studio",
                 subtitle = "Расширенная статистика",
-                centered = true,
             )
         }
 

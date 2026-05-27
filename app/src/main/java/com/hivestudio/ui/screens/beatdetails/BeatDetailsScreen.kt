@@ -54,17 +54,19 @@ fun BeatDetailsScreen(
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item {
-            ScreenHeader(
-                title = "Аналитика бита",
-                subtitle = "Подробная карточка релиза, история интереса и тестовые действия по статистике.",
-            )
-        }
-
         when (val current = state) {
             LoadState.Loading -> item { CircularProgressIndicator() }
             is LoadState.Error -> item { Text(current.message) }
             is LoadState.Success -> {
+                if (current.data.beat.isOwnedBySession) {
+                    item {
+                        ScreenHeader(
+                            title = "Аналитика бита",
+                            subtitle = "Подробная карточка релиза, история интереса и тестовые действия по статистике.",
+                        )
+                    }
+                }
+
                 item {
                     BeatDetailsHeroPanel(
                         beat = current.data.beat,
@@ -83,29 +85,31 @@ fun BeatDetailsScreen(
                     }
                 }
 
-                item {
-                    BeatHistorySection(history = current.data.history)
-                }
+                if (current.data.beat.isOwnedBySession) {
+                    item {
+                        BeatHistorySection(history = current.data.history)
+                    }
 
-                val metrics = listOf(
-                    DashboardMetricUi(AnalyticsMetricType.Plays, "Прослушивания", current.data.beat.plays.toString()),
-                    DashboardMetricUi(AnalyticsMetricType.Likes, "Лайки", current.data.likesCount.toString()),
-                    DashboardMetricUi(AnalyticsMetricType.Purchases, "Покупки", current.data.purchasesCount.toString()),
-                    DashboardMetricUi(AnalyticsMetricType.Revenue, "Выручка", "${current.data.revenueRubles} ₽"),
-                )
+                    val metrics = listOf(
+                        DashboardMetricUi(AnalyticsMetricType.Plays, "Прослушивания", current.data.beat.plays.toString()),
+                        DashboardMetricUi(AnalyticsMetricType.Likes, "Лайки", current.data.likesCount.toString()),
+                        DashboardMetricUi(AnalyticsMetricType.Purchases, "Покупки", current.data.purchasesCount.toString()),
+                        DashboardMetricUi(AnalyticsMetricType.Revenue, "Выручка", "${current.data.revenueRubles} ₽"),
+                    )
 
-                items(metrics.chunked(2).size) { rowIndex ->
-                    val row = metrics.chunked(2)[rowIndex]
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        row.forEachIndexed { index, metric ->
-                            DashboardMetricCard(
-                                metric = metric,
-                                modifier = Modifier.weight(1f),
-                                emphasized = rowIndex == 0 && index == 0,
-                            )
-                        }
-                        if (row.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
+                    items(metrics.chunked(2).size) { rowIndex ->
+                        val row = metrics.chunked(2)[rowIndex]
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            row.forEachIndexed { index, metric ->
+                                DashboardMetricCard(
+                                    metric = metric,
+                                    modifier = Modifier.weight(1f),
+                                    emphasized = rowIndex == 0 && index == 0,
+                                )
+                            }
+                            if (row.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
                     }
                 }

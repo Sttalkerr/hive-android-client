@@ -69,11 +69,6 @@ fun BeatsScreen(
             LoadState.Loading -> item(span = { GridItemSpan(maxLineSpan) }) { CircularProgressIndicator() }
             is LoadState.Error -> item(span = { GridItemSpan(maxLineSpan) }) { Text(current.message) }
             is LoadState.Success -> {
-                if (current.data.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Text("У тебя пока нет битов по этому фильтру")
-                    }
-                }
                 items(current.data, key = { it.id }) { beat ->
                     BeatCard(
                         beat = beat,
