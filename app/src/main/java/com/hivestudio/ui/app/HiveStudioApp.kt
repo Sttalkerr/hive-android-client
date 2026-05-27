@@ -140,7 +140,13 @@ fun HiveStudioApp() {
                 )
             }
             composable("add_beat") {
-                AddBeatScreen()
+                AddBeatScreen(
+                    onUploaded = { beatId ->
+                        navController.navigate("beat/$beatId") {
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
             composable(
                 route = "beat/{beatId}",

@@ -21,6 +21,9 @@ object SessionStore {
     val currentProducerId: String?
         get() = preferences?.getString(keyProducerId, null)
 
+    val currentStageName: String?
+        get() = preferences?.getString(keyStageName, null)
+
     fun initialize(context: Context) {
         if (preferences != null) return
         preferences = context.applicationContext.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)

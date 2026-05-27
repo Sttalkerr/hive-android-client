@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hivestudio.data.session.SessionStore
 import com.hivestudio.ui.components.BeatCard
 import com.hivestudio.ui.components.ScreenHeader
 import com.hivestudio.ui.model.AddBeatDraftUi
@@ -38,10 +39,12 @@ import com.hivestudio.ui.theme.GraphiteSoft
 
 @Composable
 fun AddBeatScreen(
+    onUploaded: (String) -> Unit = {},
     viewModel: AddBeatViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val uploadState = viewModel.uploadState.collectAsStateWithLifecycle().value
+    val producerStageName = SessionStore.currentStageName.orEmpty().ifBlank { "Мой никнейм" }
 
     val title = rememberSaveable { mutableStateOf("") }
     val genre = rememberSaveable { mutableStateOf("") }
@@ -80,8 +83,8 @@ fun AddBeatScreen(
     )
 
     LaunchedEffect(uploadState) {
-        val successMessage = (uploadState as? LoadState.Success)?.data.orEmpty()
-        if (successMessage.contains("успешно загружен")) {
+        val result = (uploadState as? LoadState.Success)?.data ?: UploadedBeatResult.EMPTY
+        if (result.beatId.isNotBlank()) {
             title.value = ""
             genre.value = ""
             bpm.value = ""
@@ -91,6 +94,7 @@ fun AddBeatScreen(
             description.value = ""
             mp3UriString = null
             coverUriString = null
+            onUploaded(result.beatId)
             viewModel.resetUploadState()
         }
     }
@@ -103,8 +107,6 @@ fun AddBeatScreen(
         item {
             ScreenHeader(
                 title = "Добавить бит",
-                subtitle = "Новый релиз: файл, обложка, цена и быстрый визуальный предпросмотр.",
-                centered = true,
             )
         }
 
@@ -223,7 +225,7 @@ fun AddBeatScreen(
                         beat = BeatCardUi(
                             id = "preview-draft",
                             producerId = "local-producer",
-                            producerStageName = "Твой профиль",
+                            producerStageName = producerStageName,
                             title = draft.title.ifBlank { "Новый бит" },
                             genre = draft.genre.ifBlank { "Жанр" },
                             bpm = draft.bpm.toIntOrNull() ?: 0,
@@ -240,7 +242,11 @@ fun AddBeatScreen(
                     when (val state = uploadState) {
                         LoadState.Loading -> CircularProgressIndicator()
                         is LoadState.Error -> Text(state.message, color = MaterialTheme.colorScheme.error)
-                        is LoadState.Success -> Text(state.data, color = BlueAccent)
+                        is LoadState.Success -> {
+                            if (state.data.message.isNotBlank()) {
+                                Text(state.data.message, color = BlueAccent)
+                            }
+                        }
                     }
 
                     Button(

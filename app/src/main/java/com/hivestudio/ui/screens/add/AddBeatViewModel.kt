@@ -17,8 +17,8 @@ import kotlinx.coroutines.launch
 class AddBeatViewModel(
     private val repository: AddBeatUploadRepository = AddBeatUploadRepository(),
 ) : ViewModel() {
-    private val _uploadState = MutableStateFlow<LoadState<String>>(LoadState.Success(""))
-    val uploadState: StateFlow<LoadState<String>> = _uploadState.asStateFlow()
+    private val _uploadState = MutableStateFlow<LoadState<UploadedBeatResult>>(LoadState.Success(UploadedBeatResult.EMPTY))
+    val uploadState: StateFlow<LoadState<UploadedBeatResult>> = _uploadState.asStateFlow()
 
     fun uploadBeat(
         context: Context,
@@ -36,7 +36,12 @@ class AddBeatViewModel(
             _uploadState.value = runCatching {
                 val beat = repository.uploadBeat(context, draft, mp3Uri, coverUri)
                 CatalogRefreshBus.notifyChanged()
-                LoadState.Success("Бит ${beat.title} успешно загружен")
+                LoadState.Success(
+                    UploadedBeatResult(
+                        beatId = beat.id,
+                        message = "Бит ${beat.title} успешно загружен",
+                    )
+                )
             }.getOrElse {
                 LoadState.Error(it.toUserMessage("Не удалось загрузить бит"))
             }
@@ -44,6 +49,18 @@ class AddBeatViewModel(
     }
 
     fun resetUploadState() {
-        _uploadState.value = LoadState.Success("")
+        _uploadState.value = LoadState.Success(UploadedBeatResult.EMPTY)
+    }
+}
+
+data class UploadedBeatResult(
+    val beatId: String,
+    val message: String,
+) {
+    companion object {
+        val EMPTY = UploadedBeatResult(
+            beatId = "",
+            message = "",
+        )
     }
 }
