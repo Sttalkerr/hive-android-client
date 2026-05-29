@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -79,7 +78,7 @@ fun ProfileScreen(
             }
         } else {
             when (val current = profileState) {
-                LoadState.Loading -> item { CircularProgressIndicator() }
+                LoadState.Loading -> item { }
                 is LoadState.Error -> item {
                     Card(modifier = Modifier.fillMaxWidth()) {
                         androidx.compose.foundation.layout.Column(

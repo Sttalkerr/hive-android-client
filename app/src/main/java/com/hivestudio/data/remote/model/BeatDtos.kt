@@ -14,6 +14,10 @@ data class BeatDto(
     val mp3Url: String,
     val coverImageFileName: String,
     val coverImageUrl: String,
+    val playsCount: Int,
+    val likesCount: Int,
+    val purchasesCount: Int,
+    val revenueTotal: Double,
     val createdAt: String,
 )
 

@@ -32,7 +32,9 @@ class BeatsViewModel(
     fun loadBeats(query: String?) {
         currentQuery = query
         viewModelScope.launch {
-            _state.value = LoadState.Loading
+            if (_state.value !is LoadState.Success) {
+                _state.value = LoadState.Loading
+            }
             _state.value = runCatching {
                 val beats = repository.loadBeatCards(query).sortedBy(currentSort)
                 LoadState.Success(beats)

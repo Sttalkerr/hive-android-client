@@ -16,4 +16,7 @@ data class BeatCardUi(
     val localCoverUri: String? = null,
     val description: String,
     val plays: Int,
+    val likes: Int = 0,
+    val purchases: Int = 0,
+    val revenueRubles: Int = 0,
 )

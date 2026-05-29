@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -68,7 +67,7 @@ fun EditBeatScreen(
         }
 
         when (val current = beatState) {
-            LoadState.Loading -> item { CircularProgressIndicator() }
+            LoadState.Loading -> item { }
             is LoadState.Error -> item { Text(current.message) }
             is LoadState.Success -> {
                 item {
@@ -127,7 +126,7 @@ fun EditBeatScreen(
                             )
 
                             when (val state = saveState) {
-                                LoadState.Loading -> CircularProgressIndicator()
+                                LoadState.Loading -> Text("Сохранение...")
                                 is LoadState.Error -> Text(state.message, color = MaterialTheme.colorScheme.error)
                                 is LoadState.Success -> if (state.data.isNotBlank()) {
                                     Text(state.data, color = MaterialTheme.colorScheme.primary)

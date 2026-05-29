@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -66,7 +65,7 @@ fun BeatsScreen(
         }
 
         when (val current = state) {
-            LoadState.Loading -> item(span = { GridItemSpan(maxLineSpan) }) { CircularProgressIndicator() }
+            LoadState.Loading -> item(span = { GridItemSpan(maxLineSpan) }) { }
             is LoadState.Error -> item(span = { GridItemSpan(maxLineSpan) }) { Text(current.message) }
             is LoadState.Success -> {
                 items(current.data, key = { it.id }) { beat ->

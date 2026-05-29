@@ -29,7 +29,9 @@ class DashboardViewModel(
 
     fun loadDashboard() {
         viewModelScope.launch {
-            _state.value = LoadState.Loading
+            if (_state.value !is LoadState.Success) {
+                _state.value = LoadState.Loading
+            }
             _state.value = runCatching {
                 LoadState.Success(repository.loadDashboardOverview())
             }.getOrElse {

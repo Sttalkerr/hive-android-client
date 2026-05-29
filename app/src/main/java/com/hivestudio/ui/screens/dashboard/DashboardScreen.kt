@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -41,7 +40,7 @@ fun DashboardScreen(
         }
 
         when (val current = state) {
-            LoadState.Loading -> item { CircularProgressIndicator() }
+            LoadState.Loading -> item { }
             is LoadState.Error -> item { Text(current.message) }
             is LoadState.Success -> {
                 current.data.topBeat?.let { beat ->

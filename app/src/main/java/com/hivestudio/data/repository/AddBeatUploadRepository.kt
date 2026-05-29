@@ -47,6 +47,8 @@ class AddBeatUploadRepository(
             description = description,
             mp3 = mp3Part,
             coverImage = coverPart,
-        )
+        ).also {
+            ClientDataCache.clearAll()
+        }
     }
 }

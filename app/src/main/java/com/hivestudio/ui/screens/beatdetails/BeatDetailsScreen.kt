@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -55,7 +54,7 @@ fun BeatDetailsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         when (val current = state) {
-            LoadState.Loading -> item { CircularProgressIndicator() }
+            LoadState.Loading -> item { }
             is LoadState.Error -> item { Text(current.message) }
             is LoadState.Success -> {
                 if (current.data.beat.isOwnedBySession) {

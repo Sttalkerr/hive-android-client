@@ -24,7 +24,10 @@ class AuthRepository(
                 password = password,
                 stageName = stageName.trim(),
             )
-        ).also(SessionStore::saveSession)
+        ).also {
+            SessionStore.saveSession(it)
+            ClientDataCache.clearAll()
+        }
 
     suspend fun login(
         email: String,
@@ -35,9 +38,17 @@ class AuthRepository(
                 email = email.trim(),
                 password = password,
             )
-        ).also(SessionStore::saveSession)
+        ).also {
+            SessionStore.saveSession(it)
+            ClientDataCache.clearAll()
+        }
 
-    suspend fun loadProfile(): ProfileDto = api.getProfile()
+    suspend fun loadProfile(forceRefresh: Boolean = false): ProfileDto {
+        if (!forceRefresh) {
+            ClientDataCache.profile?.let { return it }
+        }
+        return api.getProfile().also { ClientDataCache.profile = it }
+    }
 
     suspend fun updateProfile(
         stageName: String,
@@ -52,7 +63,7 @@ class AuthRepository(
                 city = city.trim(),
                 contactTag = contactTag.trim(),
             )
-        )
+        ).also { ClientDataCache.profile = it }
 
     suspend fun uploadAvatar(
         context: Context,
@@ -65,11 +76,12 @@ class AuthRepository(
                 fallbackName = "avatar.jpg",
                 mediaType = "image/*",
             )
-        )
+        ).also { ClientDataCache.profile = it }
 
     fun hasActiveSession(): Boolean = SessionStore.hasActiveSession()
 
     fun logout() {
         SessionStore.clear()
+        ClientDataCache.clearAll()
     }
 }

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -79,7 +78,7 @@ fun EditProfileScreen(
         }
 
         when (val current = profileState) {
-            LoadState.Loading -> item { CircularProgressIndicator() }
+            LoadState.Loading -> item { }
             is LoadState.Error -> item { Text(current.message) }
             is LoadState.Success -> {
                 item {

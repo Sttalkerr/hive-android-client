@@ -55,7 +55,9 @@ class ProfileViewModel(
 
         viewModelScope.launch {
             _hasSession.value = true
-            _profileState.value = LoadState.Loading
+            if (_profileState.value !is LoadState.Success) {
+                _profileState.value = LoadState.Loading
+            }
             _profileState.value = runCatching {
                 LoadState.Success(authRepository.loadProfile().toProfileUi())
             }.getOrElse {

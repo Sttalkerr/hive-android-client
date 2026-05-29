@@ -27,6 +27,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.hivestudio.data.repository.AuthRepository
+import com.hivestudio.data.repository.RemoteCatalogRepository
 import com.hivestudio.data.session.SessionEvent
 import com.hivestudio.data.session.SessionEventBus
 import com.hivestudio.data.session.SessionStore
@@ -44,6 +46,8 @@ import com.hivestudio.ui.model.AnalyticsMetricType
 import com.hivestudio.ui.screens.profile.EditProfileScreen
 import com.hivestudio.ui.screens.profile.ProfileScreen
 import com.hivestudio.ui.theme.HiveStudioTheme
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 @Composable
 fun HiveStudioApp(
@@ -52,6 +56,8 @@ fun HiveStudioApp(
 ) {
     var hasSession by remember { mutableStateOf(SessionStore.hasActiveSession()) }
     var authScreen by remember { mutableStateOf(AuthRoute.Login) }
+    val authRepository = remember { AuthRepository() }
+    val catalogRepository = remember { RemoteCatalogRepository() }
 
     if (!hasSession) {
         HiveStudioTheme(darkTheme = true) {
@@ -78,6 +84,19 @@ fun HiveStudioApp(
             if (event == SessionEvent.LoginRequired) {
                 authScreen = AuthRoute.Login
                 hasSession = false
+            }
+        }
+    }
+
+    LaunchedEffect(hasSession) {
+        if (hasSession) {
+            runCatching {
+                coroutineScope {
+                    val profile = async { authRepository.loadProfile() }
+                    val catalog = async { catalogRepository.warmUpSessionData() }
+                    profile.await()
+                    catalog.await()
+                }
             }
         }
     }

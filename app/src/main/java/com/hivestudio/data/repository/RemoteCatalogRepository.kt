@@ -26,37 +26,40 @@ class RemoteCatalogRepository(
     private val api: HiveStudioApi = HiveStudioApiFactory.create(),
 ) {
     suspend fun loadBeatCards(query: String?): List<BeatCardUi> = coroutineScope {
-        val beats = api.getBeats(query)
-        beats.map { beat ->
-            async {
-                val stats = api.getStatistics(beat.id)
-                beat.toBeatCardUi(stats)
+        if (query == null) {
+            ClientDataCache.ownBeatCards?.let { return@coroutineScope it }
+        }
+        api.getBeats(query).map { beat ->
+            beat.toBeatCardUi()
+        }.also {
+            if (query == null) {
+                ClientDataCache.ownBeatCards = it
             }
-        }.awaitAll()
+        }
     }
 
     suspend fun loadCatalogBeatCards(query: String?): List<BeatCardUi> = coroutineScope {
-        val beats = api.getCatalogBeats(query)
-        beats.map { beat ->
-            async {
-                val stats = api.getCatalogStatistics(beat.id)
-                beat.toBeatCardUi(stats)
+        if (query == null) {
+            ClientDataCache.publicCatalogBeatCards?.let { return@coroutineScope it }
+        }
+        api.getCatalogBeats(query).map { beat ->
+            beat.toBeatCardUi()
+        }.also {
+            if (query == null) {
+                ClientDataCache.publicCatalogBeatCards = it
             }
-        }.awaitAll()
+        }
     }
 
-    suspend fun loadDashboardMetrics(): List<DashboardMetricUi> = coroutineScope {
-        val beats = api.getBeats()
-        val statsList = beats.map { beat ->
-            async { api.getStatistics(beat.id) }
-        }.awaitAll()
+    suspend fun loadDashboardMetrics(): List<DashboardMetricUi> {
+        val beats = loadBeatCards(query = null)
 
-        val totalPlays = statsList.sumOf { it.playsCount }
-        val totalLikes = statsList.sumOf { it.likesCount }
-        val totalPurchases = statsList.sumOf { it.purchasesCount }
-        val totalRevenue = statsList.sumOf { it.revenueTotal }.roundToInt()
+        val totalPlays = beats.sumOf { it.plays }
+        val totalLikes = beats.sumOf { it.likes }
+        val totalPurchases = beats.sumOf { it.purchases }
+        val totalRevenue = beats.sumOf { it.revenueRubles }
 
-        listOf(
+        return listOf(
             DashboardMetricUi(AnalyticsMetricType.Plays, "Прослушивания", totalPlays.toString()),
             DashboardMetricUi(AnalyticsMetricType.Likes, "Лайки", totalLikes.toString()),
             DashboardMetricUi(AnalyticsMetricType.Purchases, "Покупки", totalPurchases.toString()),
@@ -65,6 +68,7 @@ class RemoteCatalogRepository(
     }
 
     suspend fun loadDashboardOverview(): DashboardOverviewUi {
+        ClientDataCache.dashboardOverview?.let { return it }
         val beatCards = loadBeatCards(query = null)
         val metrics = loadDashboardMetrics()
         return DashboardOverviewUi(
@@ -72,11 +76,12 @@ class RemoteCatalogRepository(
             beatsCount = beatCards.size,
             topBeat = beatCards.maxByOrNull { it.plays },
             recentBeats = beatCards.sortedByDescending { it.plays }.take(3),
-        )
+        ).also { ClientDataCache.dashboardOverview = it }
     }
 
     suspend fun deleteBeat(beatId: String) {
         api.deleteBeat(beatId)
+        ClientDataCache.clearAll()
     }
 
     suspend fun updateBeat(
@@ -98,7 +103,9 @@ class RemoteCatalogRepository(
             )
         )
         val stats = api.getStatistics(beat.id)
-        return beat.toBeatCardUi(stats)
+        return beat.toBeatCardUi(stats).also {
+            ClientDataCache.clearAll()
+        }
     }
 
     suspend fun loadBeatDetails(beatId: String): BeatDetailsUi = coroutineScope {
@@ -122,14 +129,22 @@ class RemoteCatalogRepository(
 
     suspend fun simulatePlay(beatId: String) {
         api.simulatePlay(beatId)
+        ClientDataCache.clearAll()
     }
 
     suspend fun simulateLike(beatId: String) {
         api.simulateLike(beatId)
+        ClientDataCache.clearAll()
     }
 
     suspend fun simulatePurchase(beatId: String) {
         api.simulatePurchase(beatId)
+        ClientDataCache.clearAll()
+    }
+
+    suspend fun warmUpSessionData() {
+        loadBeatCards(query = null)
+        loadDashboardOverview()
     }
 
     suspend fun loadMetricTrend(metricType: AnalyticsMetricType): MetricTrendUi = coroutineScope {
@@ -172,9 +187,7 @@ class RemoteCatalogRepository(
     private fun String.toAbsoluteApiUrl(): String =
         if (startsWith("http://") || startsWith("https://")) this else "${ApiConfig.BASE_URL}${removePrefix("/")}"
 
-    private fun BeatDto.toBeatCardUi(
-        stats: BeatStatisticsDto,
-    ): BeatCardUi =
+    private fun BeatDto.toBeatCardUi(): BeatCardUi =
         BeatCardUi(
             id = id,
             producerId = producerId,
@@ -189,7 +202,20 @@ class RemoteCatalogRepository(
             audioPreviewUrl = mp3Url.toAbsoluteApiUrl(),
             coverImageUrl = coverImageUrl.toAbsoluteApiUrl(),
             description = description,
+            plays = playsCount,
+            likes = likesCount,
+            purchases = purchasesCount,
+            revenueRubles = revenueTotal.roundToInt(),
+        )
+
+    private fun BeatDto.toBeatCardUi(
+        stats: BeatStatisticsDto,
+    ): BeatCardUi =
+        toBeatCardUi().copy(
             plays = stats.playsCount,
+            likes = stats.likesCount,
+            purchases = stats.purchasesCount,
+            revenueRubles = stats.revenueTotal.roundToInt(),
         )
 
     private fun BeatHistoryPointDto.toBeatHistoryPointUi(): BeatHistoryPointUi =

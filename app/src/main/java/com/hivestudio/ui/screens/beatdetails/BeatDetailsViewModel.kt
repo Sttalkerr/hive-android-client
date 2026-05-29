@@ -20,7 +20,9 @@ class BeatDetailsViewModel(
 
     fun loadBeat(beatId: String) {
         viewModelScope.launch {
-            _state.value = LoadState.Loading
+            if (_state.value !is LoadState.Success) {
+                _state.value = LoadState.Loading
+            }
             _state.value = runCatching {
                 LoadState.Success(repository.loadBeatDetails(beatId))
             }.getOrElse {
