@@ -162,7 +162,7 @@ class RemoteCatalogRepository(
             current.revenue += point.revenueTotal
         }
 
-        val points = aggregated.entries.map { (date, point) ->
+        val points = aggregated.entries.sortedBy { it.key }.map { (date, point) ->
             MetricTrendPointUi(
                 label = date.substringAfterLast("-"),
                 value = point.valueFor(metricType).toFloat(),

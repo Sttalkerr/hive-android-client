@@ -46,8 +46,6 @@ fun MetricDetailsScreen(
         item {
             ScreenHeader(
                 title = metricType.title,
-                subtitle = "Горизонтальная динамика по дням без перегруженных подписей.",
-                centered = true,
             )
         }
 
