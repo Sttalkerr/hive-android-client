@@ -20,7 +20,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -43,7 +42,6 @@ import com.hivestudio.ui.components.ScreenHeader
 import com.hivestudio.ui.model.BeatPriceFilter
 import com.hivestudio.ui.model.BeatSortType
 import com.hivestudio.ui.model.LoadState
-import kotlinx.coroutines.delay
 
 @Composable
 fun CatalogScreen(
@@ -58,16 +56,12 @@ fun CatalogScreen(
     var isSortPanelVisible by rememberSaveable { mutableStateOf(false) }
     var isFilterPanelVisible by rememberSaveable { mutableStateOf(false) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
     val genres by viewModel.availableGenres.collectAsStateWithLifecycle()
     val searchHistory by viewModel.searchHistory.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val showHistory = isSearchFocused && query.isBlank() && searchHistory.isNotEmpty()
-
-    LaunchedEffect(query) {
-        delay(250)
-        viewModel.loadCatalog(query.ifBlank { null })
-    }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -87,7 +81,10 @@ fun CatalogScreen(
             ) {
                 OutlinedTextField(
                     value = query,
-                    onValueChange = { query = it },
+                    onValueChange = {
+                        query = it
+                        viewModel.onQueryChanged(it)
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .onFocusChanged { isSearchFocused = it.isFocused },
@@ -100,6 +97,7 @@ fun CatalogScreen(
                     TextButton(
                         onClick = {
                             query = ""
+                            viewModel.onQueryChanged("")
                             keyboardController?.hide()
                             focusManager.clearFocus()
                             isSearchFocused = false
@@ -215,6 +213,7 @@ fun CatalogScreen(
                 Button(
                     onClick = {
                         query = entry
+                        viewModel.onQueryChanged(entry)
                         focusManager.clearFocus()
                         keyboardController?.hide()
                         isSearchFocused = false
@@ -228,9 +227,7 @@ fun CatalogScreen(
 
         if (!showHistory) {
             when (val current = state) {
-                LoadState.Loading -> item(span = { GridItemSpan(maxLineSpan) }) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                }
+                LoadState.Loading -> item(span = { GridItemSpan(maxLineSpan) }) { }
                 is LoadState.Error -> item(span = { GridItemSpan(maxLineSpan) }) {
                     androidx.compose.material3.Card(modifier = Modifier.fillMaxWidth()) {
                         Column(
@@ -248,7 +245,11 @@ fun CatalogScreen(
                     }
                 }
                 is LoadState.Success -> {
-                    if (current.data.isEmpty()) {
+                    if (isSearching && query.isNotBlank()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+                    } else if (current.data.isEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             androidx.compose.material3.Card(modifier = Modifier.fillMaxWidth()) {
                                 Column(
@@ -260,16 +261,17 @@ fun CatalogScreen(
                                 }
                             }
                         }
-                    }
-                    items(current.data, key = { it.id }) { beat ->
-                        BeatCard(
-                            beat = beat,
-                            compact = true,
-                            onOpenClick = {
-                                viewModel.saveHistory(query)
-                                onOpenBeat(beat.id)
-                            },
-                        )
+                    } else {
+                        items(current.data, key = { it.id }) { beat ->
+                            BeatCard(
+                                beat = beat,
+                                compact = true,
+                                onOpenClick = {
+                                    viewModel.saveHistory(query)
+                                    onOpenBeat(beat.id)
+                                },
+                            )
+                        }
                     }
                 }
             }

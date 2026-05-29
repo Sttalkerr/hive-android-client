@@ -10,6 +10,7 @@ import com.hivestudio.ui.model.BeatCardUi
 import com.hivestudio.ui.model.BeatPriceFilter
 import com.hivestudio.ui.model.BeatSortType
 import com.hivestudio.ui.model.LoadState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,8 @@ class CatalogViewModel(
     val availableGenres: StateFlow<List<String>> = _availableGenres.asStateFlow()
     private val _searchHistory = MutableStateFlow(SearchHistoryStore.getEntries())
     val searchHistory: StateFlow<List<String>> = _searchHistory.asStateFlow()
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
     private var currentQuery: String? = null
     private var currentSort: BeatSortType = BeatSortType.Newest
     private var currentGenre: String? = null
@@ -45,7 +48,10 @@ class CatalogViewModel(
         currentQuery = query
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            _state.value = LoadState.Loading
+            _isSearching.value = false
+            if (_state.value !is LoadState.Success) {
+                _state.value = LoadState.Loading
+            }
             _state.value = runCatching {
                 sourceBeats = repository.loadCatalogBeatCards(query)
                 _availableGenres.value = sourceBeats.map { it.genre }.distinct().sorted()
@@ -56,8 +62,29 @@ class CatalogViewModel(
         }
     }
 
+    fun onQueryChanged(query: String) {
+        val normalizedQuery = query.trim().ifBlank { null }
+        currentQuery = normalizedQuery
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            _isSearching.value = normalizedQuery != null
+            if (normalizedQuery != null) {
+                delay(250)
+            }
+            val result = runCatching {
+                sourceBeats = repository.loadCatalogBeatCards(normalizedQuery)
+                _availableGenres.value = sourceBeats.map { it.genre }.distinct().sorted()
+                LoadState.Success(sourceBeats.applyCatalogFilters())
+            }.getOrElse {
+                LoadState.Error(it.toUserMessage("Не удалось загрузить каталог"))
+            }
+            _state.value = result
+            _isSearching.value = false
+        }
+    }
+
     fun retryLastQuery() {
-        loadCatalog(currentQuery)
+        onQueryChanged(currentQuery.orEmpty())
     }
 
     fun updateSort(sortType: BeatSortType) {
